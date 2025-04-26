@@ -3,6 +3,25 @@
 \usepackage{qrcode} % Main package for QR generation
 \usepackage{graphicx} % For resizing
 \usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+
+
+% Define Scala syntax highlighting
+\lstdefinestyle{scalaStyle}{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{green},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+
 
 \usetheme{Madrid}
 \usecolortheme{default}
@@ -272,6 +291,8 @@ The Scala ecosystem is a rich and diverse collection of libraries, frameworks, a
     \item \textbf{http4s} – A purely functional HTTP library for Scala (based on Cats Effect).
     \item \textbf{Tapir} – Type-safe API definitions for HTTP endpoints (works with http4s, Akka HTTP, etc.).
     \item \textbf{Scalatra} – A lightweight, Sinatra-like web framework.
+    \item \textbf{Sttp} – Http client is an open-source HTTP client for Scala
+    \item \textbf{Finch} – Finch is a thin layer of purely functional basic blocks atop of \textbf{Finagle}
 \end{itemize}
 
 \end{frame}
@@ -332,6 +353,43 @@ If you do not have a machine that can holds JDK, or you do not have a computer a
 \end{columns}
 \end{frame}
 %---------------------------------------------------------
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Write first Scala program [Practice]}
+
+ Let's write something with Scala, What do you think about printing Hello World as any programming language you started with !!
+ 
+\end{frame}
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Hello world in Scala [Practice]}
+
+\begin{lstlisting}[style=scalaStyle]
+// Hello World in Scala
+object HelloWorld {
+  def main(args: Array[String]): Unit = {
+    println("Hello, World!") 
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Hello world in Scala [Practice]}
+
+\begin{lstlisting}[style=scalaStyle]
+@main def hello() = println("Hello, World!")
+\end{lstlisting}
+
+\end{frame}
+
 
 
 \end{document}
