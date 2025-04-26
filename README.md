@@ -9,7 +9,4 @@ Most of cases documents are written in LaTex, Markdown and even Asciidoc, this w
 
 Courses are devided into chapters, and sections
 
-
-pandoc -t beamer SLIDES -o course_1.pdf
-
-
+pdflatex {LaTexFileName.tex}
