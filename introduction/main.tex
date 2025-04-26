@@ -1,0 +1,310 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{qrcode} % Main package for QR generation
+\usepackage{graphicx} % For resizing
+\usepackage{listings}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+%------------------------------------------------------------
+%This block of code defines the information to appear in the
+%Title page
+\title[Scala] %optional
+{Function programming in Scala}
+
+\subtitle{Introduction}
+
+\author[Said BOUDJELDA] % (optional)
+{Said BOUDJELDA}
+
+\institute[efrei] % (optional)
+{
+  Senior Software Engineer @SCIAM\\
+  Follow me on GitHub @bmscomp
+}
+
+\date[efrei 2025] % (optional)
+{Course, May 2025}
+
+
+% --- Add logo to left side of header ---
+\logo{%
+  \makebox[0.95\paperwidth]{%
+    \includegraphics[height=0.8cm,keepaspectratio]{scala}%
+    \hfill%  % Pushes logo to the left
+  }%
+}
+
+\logo{\includegraphics[height=0.5cm]{logo}}
+
+%End of title page configuration block
+%------------------------------------------------------------
+
+\begin{document}
+
+%The next statement creates the title page.
+\frame{\titlepage}
+
+%---------------------------------------------------------
+%Changing visivility of the text
+\begin{frame}
+\frametitle{Planning}
+
+
+\begin{itemize}
+    \item About this course 
+    \item What is Functional programming language
+    \item What is \textbf{Scala} ? 
+    \item What \textbf{Scala} is not ? 
+    \item The \textbf{Scala} ecosystem ? 
+    \item Tools and development environment setup
+    \item Write first \textbf{Scala} program
+\end{itemize}
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{About this course}
+
+\begin{itemize}
+    \item It's a 30 hours of mix of theory and practice
+    \item It's interactive, stop me any time you need
+    \item It's functional focus then Scala practice
+    \item It's adaptable (to what your really needs)
+    \item Evaluation policy and assessments
+\end{itemize}
+\end{frame}
+
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{What is Functional programming language}
+
+\begin{itemize}
+    \item \textbf{First-class functions}: Functions are treated like any other value, you can pass them as arguments, return them from other functions, etc.
+    \item \textbf{Immutability}: Data do not change; instead, new data structures are created.
+    \item \textbf{Pure functions}: The output depends only on the input and does not have side effects.
+    \item \textbf{Recursion}: Used instead of loops for iteration.
+    \item \textbf{Higher-order functions}: Functions that take other functions as input or output.
+\end{itemize}
+\end{frame}
+
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{What is Scala ? (1/2) }
+
+Scala (short for Scalable Language) is a modern, high-level programming language that combines object-oriented programming (OOP) and functional programming (FP) paradigms. It runs on the Java Virtual Machine (JVM) and is fully interoperable with Java, making it a popular choice for building robust, high-performance applications.
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{What is Scala ? (2/2) }
+
+\begin{itemize}
+    \item It's hight level programming language
+    \item Scala is a functional and object oriented programming
+    \item Scala is not a pure functional programming
+    \item It has a strong type system
+    \item It has a concise syntax
+    \item It's statically typed but feels dynamic (Type inference)
+    \item It's adaptable (to what your really needs)
+    \item Evaluation policy and assessments
+    \item It's enterprise production ready programming language
+    \item It's evolving fast
+    \item It's open source, and open to community clone it on https://github.com/scala/scala3
+\end{itemize}
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{What Scala is not ? }
+
+\begin{itemize}
+    \item It's not too stable in it's feature
+    \item It's not backward compatible
+    \item It's not a pure functional programming (\textbf{Haskell})
+    \item It's not a type level programming language (\textbf{Agda, Idris})
+    \item Not single paradigm, we can do both \textbf{OO} and \textbf{FP} 
+    \item It's not a mainstream language still not like \textbf{Haskell}, \textbf{Agda} and \textbf{Idris}
+    \item Evaluation policy and assessments
+\end{itemize}
+\end{frame}
+
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{The Scala ecosystem }
+
+The Scala ecosystem is a rich and diverse collection of libraries, frameworks, and tools that enhance the functionality of the Scala programming language. Scala runs on the JVM (Java Virtual Machine) and interoperates seamlessly with Java.
+
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Core Language \text{\&} Compiler }
+
+\begin{itemize}
+    \item \textbf{Scala 2.x} \text{\&} \textbf{Scala 3 (Dotty)} – The latest major version, Scala 3, introduces many improvements like simplified syntax, enums, metaprogramming enhancements, and better type inference.
+    \item \textbf{Scala Native} – Compiles Scala to native code (via LLVM) for performance-critical applications.
+    \item \textbf{Scala.js} – Compiles Scala to JavaScript for frontend and full-stack development.
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Build Tools \text{\&} Dependency Management }
+
+\begin{itemize}
+    \item \textbf{sbt (Scala Build Tool)} – The most popular build tool for Scala, supporting incremental compilation, dependency management, and plugins.
+    \item \textbf{Mill} – A modern, fast build tool alternative to sbt.
+    \item \textbf{Bloop} – A fast compilation server for Scala.
+    \item \textbf{Coursier} – A dependency resolver and artifact fetcher (used by sbt and Scala CLI).
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Functional Programming Libraries }
+
+\begin{itemize}
+  \item \textbf{Cats}: Provides monads, functors, and other FP abstractions.
+  \item \textbf{Cats Effect}: Runtime for purely functional effect systems.
+  \item \textbf{ZIO}: Toolkit for async, concurrent, and resilient apps.
+  \item \textbf{Monix}: Reactive programming library for composable async tasks.
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Big Data \& Distributed Systems }
+
+\begin{itemize}
+  \item \textbf{Apache Spark}: Distributed data processing engine (written in Scala).
+  \item \textbf{Akka}: Toolkit for building fault-tolerant distributed systems.
+  \item \textbf{Apache Kafka}: Event streaming platform (Scala clients).
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Database \& Persistence }
+\begin{itemize}
+  \item \textbf{Slick}: Functional-relational mapping (FRM) for databases.
+  \item \textbf{Doobie}: Pure functional JDBC layer (Cats-based).
+  \item \textbf{Quill}: Compile-time query DSL for type-safe SQL.
+\end{itemize}
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Testing }
+\begin{itemize}
+  \item \textbf{ScalaTest}: Flexible testing framework for all needs.
+  \item \textbf{Specs2}: Specification-style testing library.
+  \item \textbf{munit}: Modern testing library (default in Scala 3).
+\end{itemize}
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Developer Tools }
+ \begin{itemize}
+  \item \textbf{Metals}: Language server for VS Code/Vim/Emacs.
+  \item \textbf{Scala CLI}: Command-line tool for scripts and prototyping.
+  \item \textbf{Ammonite}: Enhanced REPL and scripting environment.
+\end{itemize}
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}
+\frametitle{Ecosystem / Web Development \text{\&} HTTP Servers }
+
+\begin{itemize}
+    \item \textbf{Play Framework} – A full-stack web framework with reactive, stateless architecture.
+    \item \textbf{Akka HTTP} – A high-performance, actor-based HTTP server/client (part of Akka).
+    \item \textbf{http4s} – A purely functional HTTP library for Scala (based on Cats Effect).
+    \item \textbf{Tapir} – Type-safe API definitions for HTTP endpoints (works with http4s, Akka HTTP, etc.).
+    \item \textbf{Scalatra} – A lightweight, Sinatra-like web framework.
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Tools and development environment setup [Practice]}
+
+\begin{itemize}
+    \item Scala in running on JVM, we need to install JDK 
+    \item Choose your favorite editor (We love all editors but still in love the \textbf{IntelliJ IDEA}), and you still can use \textbf{Vim} and \textbf{Emacs} if you want
+    \item You need a \textbf{Web browser} (PDF can be read on browser) 
+    \item Better to have \textbf{Git} and better \textbf{GitHub} account
+    \item You still need a command line tool or terminal
+    \item Need to install \textbf{sbt} (Scala Build Tool)
+\end{itemize}
+\end{frame}
+
+\section{Second section}
+
+%---------------------------------------------------------
+%Two columns
+\begin{frame}
+\frametitle{Install Scala}
+
+\begin{columns}
+
+\column{0.5\textwidth}
+To install Scala, it is recommended to use cs setup, the Scala installer powered by Coursier
+
+\begin{itemize}
+  \item Important to have \textbf{REPL}
+  \item Important to have last version
+  \item type \textbf{scala version} to check every thing is installed
+\end{itemize}
+
+\column{0.5\textwidth}
+\qrcode[height=3cm]{https://scala-lang.org/download/} \\
+\end{columns}
+\end{frame}
+%---------------------------------------------------------
+
+
+%---------------------------------------------------------
+%Two columns
+\begin{frame}
+\frametitle{Install Scala without a computer, yes it's possible}
+
+\begin{columns}
+
+\column{0.5\textwidth}
+If you do not have a machine that can holds JDK, or you do not have a computer at all, of if you have only a mobile phone, or just a tabled you can still code in \textbf{Scala}
+
+\textcolor{red}{But unfortunately it does not works well all the time}
+ 
+\column{0.5\textwidth}
+\qrcode[height=3cm]{https://scastie.scala-lang.org} \\
+\end{columns}
+\end{frame}
+%---------------------------------------------------------
+
+
+\end{document}
