@@ -1,0 +1,672 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs} % For better table formatting
+\usepackage{qrcode} % Main package for QR generation
+\usepackage{graphicx} % For resizing
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+
+% Define Scala syntax highlighting
+\lstdefinestyle{scalaStyle}{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{brown},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+\definecolor{scalared}{RGB}{215,50,58}
+\definecolor{darkblue}{RGB}{0,0,139}
+\definecolor{pureblue}{RGB}{0,82,155}
+\definecolor{impurered}{RGB}{186,0,13}
+\definecolor{titleblue}{RGB}{0,82,155}
+\definecolor{alertred}{RGB}{186,0,13}
+\definecolor{darkgray}{RGB}{80,80,80}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+%------------------------------------------------------------
+%This block of code defines the information to appear in the
+%Title page
+\title[Scala] %optional
+{Functional programming in Scala}
+
+\subtitle{Functions}
+
+\author[Said BOUDJELDA] % (optional)
+{Said BOUDJELDA}
+
+\institute[efrei] % (optional)
+{
+  Senior Software Engineer @SCIAM\\
+  Email : mohamed-said.boudjelda@intervenants.efrei.net \\ 
+  Follow me on GitHub @bmscomp
+}
+
+\date[efrei 2025] % (optional)
+{Course, May 2025}
+
+
+
+% --- Add logo to left side of header ---
+\logo{%
+  \makebox[0.95\paperwidth]{%
+    \includegraphics[height=0.8cm,keepaspectratio]{scala}%
+    \hfill%  % Pushes logo to the left
+  }%
+}
+
+\logo{\includegraphics[height=0.6cm]{logo}}
+
+
+\newcommand{\chapterpage}[2]{
+  \begin{frame}[plain]
+    \centering
+    \vfill
+    {\usebeamerfont{title}\usebeamercolor[fg]{title}Chapter #1\\}
+    \vspace{0.5cm}
+    {\usebeamerfont{subtitle}#2}
+    \vfill
+  \end{frame}
+}
+
+
+%End of title page configuration block
+%------------------------------------------------------------
+
+\begin{document}
+
+%The next statement creates the title page.
+\frame{\titlepage}
+
+
+%---------------------------------------------------------
+%Changing visivility of the text
+\begin{frame}
+\frametitle{Definition}
+
+In functional programming languages, functions are the fundamental building blocks of computation. They are treated differently than in imperative languages, more like mathematical functions and first-class citizens. 
+
+We will learn here what that means in practice.
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Impure functions}
+
+\begin{lstlisting}[style=scalaStyle]
+/**
+ * Not pure because it have side affect 
+ */
+val greeting: Unit = println("Hello, Scala") 
+
+\end{lstlisting}
+
+\end{frame}
+
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Pure functions}
+
+\begin{lstlisting}[style=scalaStyle]
+
+/**
+ * Deterministic: The same input always gives the same output.
+ * Side effect-free: It does not modify any state or interact with the outside world (no I/O, * no global variable changes).
+ */
+val add = (x: Int, y: Int) => x + y
+
+// Same Function with another declaration
+val add: (Int, Int) => Int = (a, b) => a + b
+
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Functions are not Methods}
+
+Methods look and behave very similar to functions, but there are a few key differences between them.
+
+
+\begin{lstlisting}[style=scalaStyle]
+
+/**
+ * Methods are defined with the def keyword. def is followed by a name, parameter list(s), a return type, and a body
+ */
+def add(x: Int, y: Int): Int = x + y
+println(add(1, 2)) // 3
+
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{First-Class Citizens}
+
+\begin{lstlisting}[style=scalaStyle]
+
+/**
+ * Be assigned to variables
+ * Be passed as arguments
+ * Be returned from other functions
+ */
+
+val sum = (x:Int , y: Int) => x + y
+val double = (x: Int) => x * 2
+def application(f: Int => Int, x: Int): Int = f(x)
+def apply(f: (Int, Int) => Int, x: Int, y: Int): Int = f(x, y)
+
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Function Composition}
+
+\begin{lstlisting}[style=scalaStyle]
+
+val f = (x: Int) => x + 1
+val g = (x: Int) => x * 2
+val h = f.compose(g) // h(x) = f(g(x)) = (x * 2) + 1
+
+\end{lstlisting}
+
+\end{frame}
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Lamdba  \( \lambda \) functions}
+
+A lambda (aka anonymous function) is a function defined without a name
+
+
+\begin{lstlisting}[style=scalaStyle]
+(x: Int) => x * 2
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Immutability and Referential Transparency}
+
+\begin{lstlisting}[style=scalaStyle]
+// Referentially transparent
+def square(n: Int): Int = n * n
+// Can be replaced with 16 + 16 or 32
+val result = square(4) + square(4)  
+// Not referentially transparent (depends on external state)
+
+\end{lstlisting}
+
+\end{frame}
+
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Recursion and tail call optimization}
+
+Recursion is a function that it calls itself
+
+\begin{lstlisting}[style=scalaStyle]
+val factorial: Int => Int = (n: Int) => 
+  if (n <= 1) 1          // Base case
+  else n * factorial(n - 1) // Recursive case
+
+// Tail call optimization
+import scala.annotation.tailrec
+val factorial: Int => Int = {
+  @tailrec
+  def loop(n: Int, acc: Int): Int = n match {
+    case 0 | 1 => acc
+    case _ => loop(n - 1, n * acc)
+  }
+  (n: Int) => loop(n, 1)
+}
+
+\end{lstlisting}
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher-Order Functions (HOFs)}
+
+Functions that take other functions as arguments or return them.
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher-Order Functions (HOFs)}
+\framesubtitle{Why Use HOFs?}
+
+\begin{itemize}
+    \item \textbf{Abstraction}: Reduce code duplication
+    \item \textbf{Expressiveness}: Write more declarative code
+    \item \textbf{Composability}: Combine small functions into complex operations
+    \item \textbf{Flexibility} : Parameterize behavior
+\end{itemize}
+
+\end{frame}
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher-Order Functions (HOFs)}
+\framesubtitle{map function}
+
+The map function is a fundamental higher-order function in Scala that applies a given function to each element of a collection and returns a new collection with the transformed elements.
+
+\begin{lstlisting}[style=scalaStyle]
+/**
+ * The map function functiona implementation
+ */
+
+val map: [A, B] => (List[A], A => B) => List[B] =
+  [A, B] => (list, f) => list match
+    case Nil => Nil
+    case head :: tail => f(head) :: map(tail, f)
+
+val numbers = List(1, 2, 3, 4)
+val doubled = map(numbers, x => x * 2)  
+//The result will be List(2, 4, 6, 8)
+
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher-Order Functions (HOFs)}
+\framesubtitle{flatMap function}
+
+\textbf{flatMap} combines mapping and flattening operations. It's more powerful than map because it can handle nested structures and transform each element into a new collection, then flatten the results into a single collection
+
+\begin{lstlisting}[style=scalaStyle]
+
+val flatMap:[A, B] => (List[A], A => List[B]) => List[B] = 
+  [A, B] => (list, f) => list.foldRight(List.empty[B])((a, acc) => f(a) ++ acc)
+
+val numbers = List(1, 2, 3)
+val result = flatMap(numbers)(n => List(n, n * 10))
+// result: List[Int] = List(1, 10, 2, 20, 3, 30)
+
+\end{lstlisting}
+
+\end{frame}
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher-Order Functions (HOFs)}
+\framesubtitle{map vs flatMap}
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Feature} & \texttt{map} & \texttt{flatMap} \\
+\midrule
+Return type & Single element & Collection/Monadic type \\
+\addlinespace
+Result structure & Wrapped in same context & Flattened structure \\
+\addlinespace
+Function signature & \texttt{A => B} & \texttt{A => F[B]} \\
+\addlinespace
+Use case & Simple transformations & Transform + flatten \\
+\addlinespace
+Nested collections & Preserves nesting & Removes one level of nesting \\
+\addlinespace
+For-comprehensions & Used with \texttt{yield} & Used with \texttt{<-} \\
+\bottomrule
+\end{tabular}
+
+\vspace{1em}
+\begin{itemize}
+\item Both preserve the original collection
+\item Both are higher-order functions
+\item \texttt{flatMap} is monadic bind operation
+\end{itemize}
+\end{frame}
+
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher-Order Functions (HOFs)}
+\framesubtitle{HOFs Filter function}
+
+\begin{lstlisting}[style=scalaStyle]
+
+/**
+ * The filter function 
+ */
+
+val filter: List[Int] => (Int => Boolean) => List[Int] =
+  list => predicate => list match
+    case Nil => Nil
+    case head :: tail =>
+      if (predicate(head)) head :: filter(tail)(predicate)
+      else filter(tail)(predicate)
+
+
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher-Order Functions (HOFs)}
+\framesubtitle{Fold function}
+
+A \textbf{fold} function (also known as \textbf{reduce} or \textbf{aggregate}) is a powerful higher-order function in functional programming that reduces a collection (like a \textbf{List}) to a single value by applying a binary operation repeatedly, starting from an initial value.
+
+\end{frame}
+
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{HOFs/Fold  Function}
+\framesubtitle{foldLeft implementation}
+
+\textbf{foldLeft} processes elements left-to-right (from the first to the last).
+
+\begin{lstlisting}[style=scalaStyle]
+
+// foldLeft (Tail-recursive, stack-safe)
+def left[A, B](list: List[A])(ini: B)(op: (B, A) => B): B =
+  list match
+    case Nil => initial
+    case head :: tail => left(tail)(op(initial, head))(op)
+
+val nums = List(1, 2, 3, 4)
+// foldLeft: (((0 - 1) - 2) - 3) - 4 = -10
+nums.foldLeft(0)(_ - _)  
+
+
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{HOFs Fold Function}
+\framesubtitle{foldRight implementation}
+
+\textbf{foldRight} processes elements right-to-left (from the last to the first).
+
+\begin{lstlisting}[style=scalaStyle]
+
+// foldRight (Not tail-recursive)
+def foldRight[A, B](list: List[A])(initial: B)(op: (A, B) => B): B =
+  list match
+    case Nil => initial
+    case head :: tail => op(head, foldRight(tail)(initial)(op))
+
+val nums = List(1, 2, 3, 4)
+// foldRight: 1 - (2 - (3 - (4 - 0))) = -2
+nums.foldRight(0)(_ - _)  
+
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}{Folds  Performance \& Stack Safety Comparison}
+Both foldLeft and foldRight are higher-order functions that combine elements of a collection into a single result, but they differ in key ways
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Feature} & \textbf{\texttt{foldLeft}} & \textbf{\texttt{foldRight}} \\
+\midrule
+Tail-recursive & \checkmark & \texttimes \\
+Stack-safe on large collections & \checkmark & \texttimes \\
+Time Complexity & $O(n)$ (iterative) & $O(n)$ (but stack risk) \\
+Space Complexity & $O(1)$ & $O(n)$ (call stack) \\
+Works with infinite streams & \texttimes & \checkmark (if lazy) \\
+\bottomrule
+\end{tabular}
+
+\vspace{1em}
+\footnotesize
+\begin{itemize}
+\item \checkmark = Supported, \texttimes = Not supported
+\item \texttt{foldLeft} uses constant space (tail-recursion optimized)
+\item \texttt{foldRight} may overflow on large lists (non-tail-recursive)
+\end{itemize}
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Combining Immutability and Referential Transparency}
+
+\begin{lstlisting}[style=scalaStyle]
+def double(x: Int): Int = x * 2
+def square(x: Int): Int = x * x
+val numbers = List(1, 2, 3, 4, 5)
+val processed = numbers.map(double).map(square)
+
+// We can also compose
+val composed = numbers.map(x => square(double(x))))
+
+\end{lstlisting}
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Partial functions}
+
+A partial function is a function that is valid for only a subset of values of those types you might pass in to it
+
+
+Do not confuse partial functions with partially applied functions
+\begin{lstlisting}[style=scalaStyle]
+val root: PartialFunction[Double,Double] = 
+  case d if (d >= 0) => math.sqrt(d)
+
+root(-1) // will result scala.MatchError
+root.isDefinedAt(-1) // Will result false
+root(3) // Double = 1.7320508075688772 
+
+// List of only roots which are defined
+List(0.5, -0.2, 4).collect(root) 
+
+\end{lstlisting}
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Partially Applied Functions}
+
+A partially applied function is when you take a function with multiple parameters and fix some of them, creating a new function with fewer parameters.
+
+\begin{lstlisting}[style=scalaStyle]
+val add:(Int, Int, Int)=> Int = (a, b, c) => a + b + c 
+// Partially applying it by fixing some parameters
+val add2Numbers: (Int, Int) => Int = add(2, _, _)
+val fivePlusSeven: Int => Int = add(5, 7, _)
+// not partial application - all args applied
+val fixedSum: Int = add(1, 2, 3) 
+// Usage
+addTwoToNumbers(3, 4)   // 2 + 3 + 4 = 9
+fivePlusSeven(10)     // 5 + 7 + 10 = 22
+
+\end{lstlisting}
+\end{frame}
+
+%---------------------------------------------------------
+%Two columns
+\begin{frame}
+\frametitle{Partial Functions vs Partially applied Functions}
+
+\begin{columns}
+
+\column{0.5\textwidth}
+
+\begin{itemize}
+    \item Defined only for even inputs (partial domain)
+    \item Uses pattern matching with guard condition
+    \item Provides isDefinedAt to check applicability
+    \item Can be combined with other partial functions
+    \item Throws MatchError for undefined inputs
+\end{itemize}
+ 
+\column{0.5\textwidth}
+
+\begin{itemize}
+    \item Created from regular functions
+    \item \textbf{Fixes} some parameters while leaving others open
+    \item Results in a new function with fewer parameters
+    \item Uses underscore \_ as placeholder for unspecified parameters
+\end{itemize}
+
+\end{columns}
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Currying functions}
+
+Currying is a functional programming technique that transforms a function taking multiple arguments into a sequence of functions that each take a single argument. 
+
+\begin{lstlisting}[style=scalaStyle]
+// Regular multi-argument function
+val add: (Int, Int) => Int = (a, b) => a + b
+
+// Curried version
+val addCurried: Int => Int => Int = a => b => a + b
+
+// Usage
+val add5: Int => Int = addCurried(5)
+println(add5(10))  // 15
+
+\end{lstlisting}
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Closures and Lexical Scope}
+
+A closure is a function that "closes over" (captures) variables from its surrounding lexical scope, even if those variables are no longer in scope when the function is executed.
+
+\begin{lstlisting}[style=scalaStyle]
+
+val outer: Int => () => Int = x => {
+  val captured = x
+  () => captured + 10
+}
+
+val closure = outer(5)
+println(closure())  // Output: 15
+
+\end{lstlisting}
+\end{frame}
+
+
+%---------------------------------------------------------
+\begin{frame}{Pure Functions: Key Papers}
+\footnotesize
+
+\begin{thebibliography}{9}
+\beamertemplatetextbibitems
+
+\subsection*{Theoretical Foundations}
+\bibitem[Church, 1936]{church1936}
+\textcolor{pureblue}{Church, A.} 
+\textit{An Unsolvable Problem of Elementary Number Theory}. 1936.
+\footnotesize{\\ \color{gray}Lambda calculus as basis for pure functions}
+
+\bibitem[Backus, 1978]{backus1978}
+\textcolor{pureblue}{Backus, J.} 
+\textit{Can Programming Be Liberated from the von Neumann Style?} 1978.
+\footnotesize{\\ \color{gray}FP manifesto emphasizing purity}
+
+\subsection*{Language Design}
+\bibitem[Hughes, 1989]{hughes1989}
+\textcolor{pureblue}{Hughes, J.} 
+\textit{Why Functional Programming Matters}. 1989.
+\footnotesize{\\ \color{gray}Purity enables referential transparency}
+
+\bibitem[Odersky, 2014]{odersky2014}
+\textcolor{pureblue}{Odersky, M.} 
+\textit{Scala: Unified OOP-FP}. 2014.
+\footnotesize{\\ \color{gray}Implementing purity in impure environments}
+
+\subsection*{Practical Applications}
+\bibitem[Peyton Jones, 2003]{peytonjones2003}
+\textcolor{pureblue}{Peyton Jones, S.} 
+\textit{Haskell 98 Language Report}. 2003.
+\footnotesize{\\ \color{gray}Pure-by-default design}
+
+\bibitem[Cherny, 2020]{cherny2020}
+\textcolor{pureblue}{Cherny, E.} 
+\textit{Programming TypeScript}. 2020.
+\footnotesize{\\ \color{gray}Practical purity in TypeScript/JavaScript}
+
+
+\end{thebibliography}
+
+\end{frame}
+
+%---------------------------------------------------------
+
+\begin{frame}[allowframebreaks]{Key Papers on Higher-Order Functions in Scala}
+\footnotesize % Save space
+\begin{thebibliography}{6} % Manual entries if no .bib file
+
+\beamertemplatetextbibitems % Numeric labels
+
+\subsection*{Foundations of Scala HOFs}
+\bibitem{oderskym2004}
+\color{darkblue}Odersky, M., et al.
+\color{black}\textit{An Overview of the Scala Programming Language}, 2004.
+\color{gray}\footnotesize (Introduces first-class HOFs in Scala's OOP/FP blend)
+
+\bibitem{oliveira2010}
+\color{darkblue}Oliveira, B. C. d. S., et al.
+\color{black}\textit{Type Classes as Objects and Implicits}, OOPSLA 2010.
+\color{gray}\footnotesize (HOFs + implicits for Haskell-style type classes)
+
+\subsection*{Optimization \& Compilation}
+\bibitem{kossakowski2012}
+\color{darkblue}Kossakowski, G., et al.
+\color{black}\textit{Miniboxing: Improving Specialization}, SCALA 2012.
+\color{gray}\footnotesize (Optimizing generic HOFs via \texttt{@specialized})
+
+\bibitem{burmako2013}
+\color{darkblue}Burmako, E.
+\color{black}\textit{Scala Macros: Let Our Powers Combine}, SCALA 2013.
+\color{gray}\footnotesize (Macros for HOF inlining, e.g., \texttt{map}→\texttt{while})
+
+\bibitem{brachthauser2020}
+\color{darkblue}Brachthäuser, J. I.
+\color{black}\textit{Effekt: Capability-Passing}, POPL 2020.
+\color{gray}\footnotesize (HOFs for effect systems beyond monads)
+
+\subsection*{Industry Case Studies}
+\bibitem{twitter2011}
+\color{darkblue}Twitter Engineering.
+\color{black}\textit{Functional Programming at Twitter}, 2011.
+\color{gray}\footnotesize (Scala's \texttt{map}/\texttt{flatMap} in distributed systems)
+
+\end{thebibliography}
+\end{frame}
+
+
+\end{document}
+%---------------------------------------------------------
