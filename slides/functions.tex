@@ -6,7 +6,8 @@
 \usepackage{listings}
 \usepackage[utf8]{inputenc}
 \usepackage{xcolor}
-
+\usepackage{multirow}
+\usepackage{array}
 
 % Define Scala syntax highlighting
 \lstdefinestyle{scalaStyle}{
@@ -44,7 +45,7 @@
 \author[Said BOUDJELDA] % (optional)
 {Said BOUDJELDA}
 
-\institute[sciam] % (optional)
+\institute[efrei] % (optional)
 {
   Senior Software Engineer @SCIAM\\
   Email : mohamed-said.boudjelda@intervenants.efrei.net \\ 
@@ -468,7 +469,7 @@ val composed = numbers.map(x => square(double(x))))
 
 %---------------------------------------------------------
 \begin{frame}[fragile]
-\frametitle{Partial applied functions}
+\frametitle{Partial functions}
 
 A partial function is a function that is valid for only a subset of values of those types you might pass in to it
 
@@ -488,7 +489,54 @@ List(0.5, -0.2, 4).collect(root)
 \end{lstlisting}
 \end{frame}
 
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Partially Applied Functions}
 
+A partially applied function is when you take a function with multiple parameters and fix some of them, creating a new function with fewer parameters.
+
+\begin{lstlisting}[style=scalaStyle]
+val add:(Int, Int, Int)=> Int = (a, b, c) => a + b + c 
+// Partially applying it by fixing some parameters
+val add2Numbers: (Int, Int) => Int = add(2, _, _)
+val fivePlusSeven: Int => Int = add(5, 7, _)
+// not partial application - all args applied
+val fixedSum: Int = add(1, 2, 3) 
+// Usage
+addTwoToNumbers(3, 4)   // 2 + 3 + 4 = 9
+fivePlusSeven(10)     // 5 + 7 + 10 = 22
+
+\end{lstlisting}
+\end{frame}
+
+%---------------------------------------------------------
+%Two columns
+\begin{frame}
+\frametitle{Partial Functions vs Partially applied Functions}
+
+\begin{columns}
+
+\column{0.5\textwidth}
+
+\begin{itemize}
+    \item Defined only for even inputs (partial domain)
+    \item Uses pattern matching with guard condition
+    \item Provides isDefinedAt to check applicability
+    \item Can be combined with other partial functions
+    \item Throws MatchError for undefined inputs
+\end{itemize}
+ 
+\column{0.5\textwidth}
+
+\begin{itemize}
+    \item Created from regular functions
+    \item \textbf{Fixes} some parameters while leaving others open
+    \item Results in a new function with fewer parameters
+    \item Uses underscore \_ as placeholder for unspecified parameters
+\end{itemize}
+
+\end{columns}
+\end{frame}
 
 %---------------------------------------------------------
 \begin{frame}[fragile]
@@ -509,8 +557,6 @@ println(add5(10))  // 15
 
 \end{lstlisting}
 \end{frame}
-
-
 
 %---------------------------------------------------------
 \begin{frame}[fragile]
@@ -623,3 +669,4 @@ println(closure())  // Output: 15
 
 
 \end{document}
+%---------------------------------------------------------
