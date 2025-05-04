@@ -1,0 +1,569 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{dolphin}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+
+\definecolor{scalablue}{RGB}{0,96,172}
+\definecolor{scalared}{RGB}{220,50,47}
+\definecolor{scalagreen}{RGB}{133,153,0}
+
+\lstdefinestyle{scala}{
+  language=scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{scalablue},
+  commentstyle=\color{scalagreen},
+  stringstyle=\color{scalared},
+  showstringspaces=false,
+  breaklines=true,
+  tabsize=2,
+  morekeywords={class, trait, object, extends, with, new, given, using, match, case, type, val, var, def, this, super, enum, export, transparent, inline, opaque, open}
+}
+
+\title{Functional Programming in Scala}
+\subtitle{Classes, Objects, and Traits}
+\author{Said BOUDJELDA}
+\institute{Eferi}
+\titlegraphic{\includegraphics[width=5cm]{logo}}
+\date{\today}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\section{Introduction to Scala 3 OOP}
+\begin{frame}[fragile]
+\frametitle{Scala 3 OOP Overview}
+\begin{itemize}
+\item \textbf{Classes}: Templates for object creation
+\item \textbf{Objects}: Singleton instances
+\item \textbf{Traits}: Reusable behavior components
+
+\begin{lstlisting}[style=scala]
+// Class example
+class Person(val name: String)
+
+// Object example
+object Logger:
+  def log(msg: String) = println(msg)
+
+// Trait example
+trait Speaker:
+  def speak(): String
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Scala 3 vs Scala 2 Improvements}
+\begin{itemize}
+\item \textbf{Simpler syntax}:
+\begin{lstlisting}[style=scala]
+// Old
+class Foo { ... }
+// New
+class Foo: ...
+\end{lstlisting}
+
+\item \textbf{New modifiers}:
+\begin{lstlisting}[style=scala]
+open class Parent  // Explicitly extensible
+transparent trait Logger  // More precise type checking
+\end{lstlisting}
+
+\item \textbf{Trait parameters}:
+\begin{lstlisting}[style=scala]
+trait Config(env: String)  // New in Scala 3
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{Classes in Depth}
+\begin{frame}[fragile]
+\frametitle{Class Constructors}
+\begin{block}{Primary Constructor}
+\begin{lstlisting}[style=scala]
+class Person(
+  val name: String,      // Public read-only field
+  var age: Int,         // Public mutable field
+  private val id: Int   // Private field
+):
+  def this(name: String) = this(name, 0, 0)  // Auxiliary
+\end{lstlisting}
+\end{block}
+
+\begin{itemize}
+\item Parameters in class declaration become constructor parameters
+\item \texttt{val} creates immutable field, \texttt{var} mutable
+\item Auxiliary constructors must call primary constructor
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Class Inheritance}
+\begin{lstlisting}[style=scala]
+open class Animal(val name: String):
+  def makeSound(): String = "Some sound"
+
+class Dog(name: String) extends Animal(name):
+  override def makeSound() = "Woof!"
+  def fetch() = "Fetching..."
+\end{lstlisting}
+
+Key points:
+\begin{itemize}
+\item \texttt{open} required for extension (new in Scala 3)
+\item \texttt{override} modifier required
+\item Single inheritance only (use traits for multiple)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Case Classes}
+\begin{lstlisting}[style=scala]
+case class Person(
+  name: String,
+  age: Int,
+  address: Address = Address.default
+)
+
+// Automatically gets:
+// 1. equals/hashCode
+// 2. toString
+// 3. copy method
+// 4. companion object with apply
+// 5. pattern matching support
+\end{lstlisting}
+
+Usage examples:
+\begin{lstlisting}[style=scala]
+val p1 = Person("Alice", 30)
+val p2 = p1.copy(age = 31)  // Non-destructive update
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Abstract Classes}
+\begin{lstlisting}[style=scala]
+abstract class Shape(val color: String):
+  def area: Double      // Abstract method
+  def perimeter: Double // Abstract method
+  def describe = s"$color shape"  // Concrete method
+
+class Circle(color: String, radius: Double) 
+  extends Shape(color):
+    def area = math.Pi * radius * radius
+    def perimeter = 2 * math.Pi * radius
+\end{lstlisting}
+
+Characteristics:
+\begin{itemize}
+\item Cannot be instantiated
+\item Can contain both abstract and concrete members
+\item Single inheritance still applies
+\end{itemize}
+\end{frame}
+
+\section{Objects in Depth}
+\begin{frame}[fragile]
+\frametitle{Singleton Objects}
+\begin{lstlisting}[style=scala]
+object MathConstants:
+  val PI = 3.1415926535
+  val E = 2.7182818284
+  def square(x: Double) = x * x
+
+// Usage:
+MathConstants.PI
+MathConstants.square(5)
+\end{lstlisting}
+
+Key uses:
+\begin{itemize}
+\item Constants and utility methods
+\item Factory methods
+\item Entry points for applications
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Companion Objects}
+\begin{lstlisting}[style=scala]
+class BankAccount private (val balance: Double):
+  // Instance members here
+
+object BankAccount:  // Companion
+  def apply(initial: Double) = 
+    new BankAccount(initial)
+    
+  def fromString(s: String): Option[BankAccount] = 
+    s.toDoubleOption.map(new BankAccount(_))
+\end{lstlisting}
+
+Benefits:
+\begin{itemize}
+\item Access to private class members
+\item Logical grouping of factory methods
+\item Alternative constructors
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Case Class Companions}
+\begin{lstlisting}[style=scala]
+case class Email(user: String, domain: String)
+
+// Generated companion includes:
+object Email:
+  // Factory method
+  def apply(user: String, domain: String) = 
+    new Email(user, domain)
+    
+  // Extractor for pattern matching
+  def unapply(email: Email): Option[(String, String)] = 
+    Some((email.user, email.domain))
+\end{lstlisting}
+
+Usage:
+\begin{lstlisting}[style=scala]
+Email("user", "example.com")  // No 'new' needed
+email match
+  case Email(u, d) => println(s"User: $u, Domain: $d")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Object Inheritance}
+\begin{lstlisting}[style=scala]
+trait JsonSerializer:
+  def toJson: String
+
+object DefaultSerializer extends JsonSerializer:
+  def toJson = "{}"
+
+// Objects can extend classes/traits
+// But cannot be extended themselves
+\end{lstlisting}
+
+Limitations:
+\begin{itemize}
+\item Objects are final (cannot be extended)
+\item Can mix in multiple traits
+\item Useful for implementing type classes
+\end{itemize}
+\end{frame}
+
+\section{Traits in Depth}
+\begin{frame}[fragile]
+\frametitle{Trait Basics}
+\begin{lstlisting}[style=scala]
+trait Logger:
+  def log(msg: String): Unit  // Abstract method
+  def info(msg: String) = log(s"INFO: $msg")  // Concrete
+  def warn(msg: String) = log(s"WARN: $msg")  // Concrete
+
+class ConsoleLogger extends Logger:
+  def log(msg: String) = println(msg)  // Implement abstract
+\end{lstlisting}
+
+Characteristics:
+\begin{itemize}
+\item Can contain abstract and concrete members
+\item Multiple inheritance allowed
+\item Cannot have constructor parameters (pre-Scala 3)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Trait Parameters (Scala 3)}
+\begin{lstlisting}[style=scala]
+trait Greeting(val prefix: String):
+  def greet(name: String) = s"$prefix $name"
+
+class FormalGreeter extends Greeting("Dear")
+class CasualGreeter extends Greeting("Hey")
+
+// Usage:
+FormalGreeter().greet("Alice")  // "Dear Alice"
+CasualGreeter().greet("Bob")    // "Hey Bob"
+\end{lstlisting}
+
+Advantages:
+\begin{itemize}
+\item Parameterized behavior without abstract members
+\item Evaluated exactly once when mixed in
+\item Alternative to constructor parameters in traits
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Stackable Traits Pattern}
+\begin{lstlisting}[style=scala]
+abstract class IntQueue:
+  def get(): Int
+  def put(x: Int): Unit
+
+trait Doubling extends IntQueue:
+  abstract override def put(x: Int) = 
+    super.put(2 * x)
+
+trait Incrementing extends IntQueue:
+  abstract override def put(x: Int) = 
+    super.put(x + 1)
+
+class BasicQueue extends IntQueue:
+  private val buf = collection.mutable.ArrayBuffer.empty[Int]
+  def get() = buf.remove(0)
+  def put(x: Int) = buf += x
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Stackable Traits Usage}
+\begin{lstlisting}[style=scala]
+val q1 = new BasicQueue with Doubling
+q1.put(10)  // Adds 20
+q1.get()    // Returns 20
+
+val q2 = new BasicQueue with Incrementing
+q2.put(10)  // Adds 11
+q2.get()    // Returns 11
+
+val q3 = new BasicQueue with Doubling with Incrementing
+q3.put(10)  // Adds 22 (10*2 then +1)
+q3.get()    // Returns 22
+
+val q4 = new BasicQueue with Incrementing with Doubling
+q4.put(10)  // Adds 21 (10+1 then *2)
+q4.get()    // Returns 21
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Self Types}
+\begin{lstlisting}[style=scala]
+trait UserRepository:
+  def findUser(id: Int): User
+
+trait UserService { self: UserRepository =>  // Self-type
+  def getUser(id: Int): User = 
+    findUser(id).orElse(defaultUser)
+}
+
+// Must mix in UserRepository
+class UserServiceImpl extends UserService with UserRepository:
+  def findUser(id: Int) = ...
+\end{lstlisting}
+
+Purpose:
+\begin{itemize}
+\item Declare trait dependencies without inheritance
+\item Enforce required mixins
+\item Avoid circular dependencies
+\end{itemize}
+\end{frame}
+
+\section{Advanced OOP Patterns}
+\begin{frame}[fragile]
+\frametitle{Type Class Pattern}
+\begin{lstlisting}[style=scala]
+// 1. Type class definition
+trait JsonWriter[A]:
+  def write(value: A): Json
+
+// 2. Type class instances
+object JsonWriterInstances:
+  given JsonWriter[String] with
+    def write(s: String) = JsonString(s)
+    
+  given JsonWriter[Int] with
+    def write(n: Int) = JsonNumber(n)
+
+// 3. Interface
+object Json:
+  def toJson[A](value: A)(using writer: JsonWriter[A]) = 
+    writer.write(value)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Extension Methods}
+\begin{lstlisting}[style=scala]
+trait StringExtensions:
+  extension (s: String)
+    def toTitleCase: String = 
+      s.split(" ").map(_.capitalize).mkString(" ")
+      
+    def encrypt(shift: Int): String = 
+      s.map(c => (c + shift).toChar)
+
+// Usage:
+import StringExtensions.*
+"hello world".toTitleCase  // "Hello World"
+"abc".encrypt(1)          // "bcd"
+\end{lstlisting}
+
+Benefits:
+\begin{itemize}
+\item Add methods to existing types
+\item More discoverable than implicit classes
+\item Group related extensions together
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Factory Pattern with Companion}
+\begin{lstlisting}[style=scala]
+sealed abstract class DatabaseConfig
+
+object DatabaseConfig:
+  // Private implementations
+  private case class PostgresConfig(url: String) 
+    extends DatabaseConfig
+    
+  private case class MongoConfig(uri: String) 
+    extends DatabaseConfig
+
+  // Factory methods
+  def postgres(url: String): DatabaseConfig = 
+    PostgresConfig(url)
+    
+  def mongo(uri: String): DatabaseConfig = 
+    MongoConfig(uri)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Value Classes}
+\begin{lstlisting}[style=scala]
+class Meter(val value: Double) extends AnyVal:
+  def +(m: Meter): Meter = new Meter(value + m.value)
+  def toKm: Kilometer = new Kilometer(value / 1000)
+
+class Kilometer(val value: Double) extends AnyVal:
+  def toMeters: Meter = new Meter(value * 1000)
+
+// Usage:
+val distance = Meter(500) + Meter(300)
+val inKm = distance.toKm  // No runtime overhead
+\end{lstlisting}
+
+Characteristics:
+\begin{itemize}
+\item Extends \texttt{AnyVal}
+\item No runtime allocation overhead
+\item Type safety without performance cost
+\end{itemize}
+\end{frame}
+
+\section{Best Practices}
+\begin{frame}[fragile]
+\frametitle{Class Design Principles}
+\begin{itemize}
+\item \textbf{Favor immutability}:
+\begin{lstlisting}[style=scala]
+// Prefer
+case class Point(x: Double, y: Double)
+
+// Over
+class MutablePoint(var x: Double, var y: Double)
+\end{lstlisting}
+
+\item \textbf{Small, focused classes}:
+\begin{itemize}
+\item Single Responsibility Principle
+\item 50-100 lines max
+\end{itemize}
+
+\item \textbf{Document invariants}:
+\begin{lstlisting}[style=scala]
+class NonEmptyList[A](val head: A, val tail: List[A]):
+  require(tail != null, "Tail cannot be null")
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Trait Design Guidelines}
+\begin{itemize}
+\item \textbf{Keep traits focused}:
+\begin{lstlisting}[style=scala]
+// Good
+trait Logging
+trait Authentication
+trait DatabaseAccess
+
+// Bad
+trait ControllerUtilities  // Too vague
+\end{lstlisting}
+
+\item \textbf{Use sealed traits for closed hierarchies}:
+\begin{lstlisting}[style=scala]
+sealed trait Response
+case class Success(data: String) extends Response
+case class Failure(error: String) extends Response
+\end{lstlisting}
+
+\item \textbf{Linearization matters}:
+\begin{itemize}
+\item Traits are stacked last-to-first
+\item Put fundamental traits first
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Object Usage Patterns}
+\begin{itemize}
+\item \textbf{For type class instances}:
+\begin{lstlisting}[style=scala]
+object JsonWriters:
+  given JsonWriter[Int] = ...
+  given JsonWriter[String] = ...
+\end{lstlisting}
+
+\item \textbf{As modules}:
+\begin{lstlisting}[style=scala]
+object DatabaseModule:
+  def connect(config: Config) = ...
+  def query(sql: String) = ...
+\end{lstlisting}
+
+\item \textbf{For entry points}:
+\begin{lstlisting}[style=scala]
+@main def runApp(): Unit =
+  println("Application started")
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+\frametitle{Key Takeaways}
+\begin{itemize}
+\item \textbf{Classes} are templates for objects with state and behavior
+\item \textbf{Objects} provide singleton instances and utilities
+\item \textbf{Traits} enable flexible composition of behavior
+\item Scala 3 adds:
+\begin{itemize}
+\item Trait parameters
+\item Open classes
+\item Improved syntax
+\end{itemize}
+\item Combine these features for clean, modular designs
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Further Learning}
+\begin{itemize}
+\item Official Scala 3 Documentation
+\item "Programming in Scala, 5th Edition" (Odersky et al.)
+\item "Scala with Cats" (Noel Welsh and Dave Gurnell)
+\item Scala Exercises (https://www.scala-exercises.org/)
+\item Contribute to open-source Scala projects
+\end{itemize}
+\end{frame}
+
+\end{document}

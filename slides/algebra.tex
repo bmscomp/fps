@@ -1,0 +1,441 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{dolphin}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Define Scala code style
+\definecolor{scalagreen}{rgb}{0,0.6,0}
+\definecolor{scalablue}{rgb}{0,0,0.8}
+\definecolor{scalared}{rgb}{0.6,0,0}
+
+\lstdefinelanguage{Scala}{
+  morekeywords={abstract,case,catch,class,def,do,else,extends,false,final,finally,for,if,implicit,import,match,mixin,new,null,object,override,package,private,protected,return,sealed,super,this,throw,trait,true,try,type,val,var,while,with,yield},
+  otherkeywords={=>,<-,<\%,<:,>:,\#,@},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+
+\lstset{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{scalablue}\bfseries,
+  stringstyle=\color{scalared},
+  commentstyle=\color{scalagreen},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=5pt,
+  tabsize=2,
+  breaklines=true,
+  showspaces=false,
+  showstringspaces=false
+}
+
+% Custom commands
+\newcommand{\note}[1]{\vspace{0.5em}\textbf{Note:} \textit{#1}}
+\newcommand{\tip}[1]{\vspace{0.5em}\textbf{Tip:} \textit{#1}}
+\newcommand{\caution}[1]{\vspace{0.5em}\textbf{Caution:} \textit{#1}}
+\newcommand{\success}[1]{\vspace{0.5em}\textbf{Success:} \textit{#1}}
+
+\title{Introduction to Functional Programming with Scala}
+\author{Said Boudjelda}
+\institute{efrei}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\begin{itemize}
+    \item \textbf{Duration}: 30 hours
+    \item \textbf{Prerequisites}: Basic programming knowledge, High school mathematics
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Teacher Profile}
+\begin{itemize}
+    \item \textbf{Instructor}: Said Boudjelda
+    \item \textbf{Background}:
+    \begin{itemize}
+        \item Senior Software Engineer @Sciam 
+        \item Open source contributor
+    \end{itemize}
+    \item \textbf{Contact}:
+    \begin{itemize}
+        \item Email: mohamed-said.boudjelda@intervenants.efrei.net
+        \item Office Hours: 30
+    \end{itemize}
+    \item \textbf{Teaching Philosophy}: Empowering students through mathematical rigor and practical coding skills
+\end{itemize}
+
+\note{Reach out for guidance or project ideas!}
+\end{frame}
+
+\begin{frame}{Course Description}
+This introductory course explores \textbf{functional programming} principles using \textbf{Scala}. Through synergy of mathematical concepts and hands-on coding, you'll learn how to design reliable, maintainable software in the functional paradigm.
+
+\vspace{0.5em}
+\textbf{Key Focus}:
+\begin{itemize}
+    \item Bridging mathematical logic to coding practice
+    \item Applying set theory, algebra, and logic in programming
+    \item Writing robust, immutable Scala programs
+\end{itemize}
+\end{frame}
+
+
+\section{Course 1: Mathematical Foundations}
+
+\begin{frame}{Course 1 Overview}
+\textbf{Topics}:
+\begin{itemize}
+    \item Set theory basics
+    \item Logic fundamentals
+    \item Abstract algebra
+    \item Functions and relations
+    \item Mathematical underpinnings in code
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Set Theory Basics: What is a Set?}
+A \textbf{set} is a collection of distinct objects.
+
+\begin{itemize}
+    \item \textbf{Notation}: $\{1, 2, 3\}$ – a set of numbers
+    \item \textbf{Cardinality}: The number of elements (e.g., $|\{1,2,3\}| = 3$)
+    \item \textbf{Order}: Sets are unordered (no sequence, unlike lists)
+    \item \textbf{Duplicates}: No duplicate elements allowed
+\end{itemize}
+
+\textbf{Example in Scala}:
+\begin{lstlisting}
+val s = Set(1, 2, 3, 2) // Result: Set(1, 2, 3)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Set Notation \& Subsets}
+\textbf{Notation}:
+\begin{itemize}
+    \item $A \subseteq B$: A is a subset of B
+    \item $\emptyset$: The empty set
+\end{itemize}
+
+\textbf{Example}:
+\begin{itemize}
+    \item If $A = \{2, 3\}$, $B = \{1, 2, 3, 4\} \Rightarrow A \subseteq B$
+\end{itemize}
+
+\textbf{Empty Set in Scala}:
+\begin{lstlisting}
+val empty = Set.empty[Int]
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Set Operations}
+\begin{itemize}
+    \item \textbf{Union ($\cup$)}: Elements in A or B
+    \item \textbf{Intersection ($\cap$)}: Elements in both A and B
+    \item \textbf{Difference ($A \setminus B$)}: In A but not in B
+    \item \textbf{Complement}: Not in set A (relative to a universe U)
+\end{itemize}
+
+\textbf{Scala}:
+\begin{lstlisting}
+val a = Set(1, 2, 3)
+val b = Set(3, 4, 5)
+a union b      // Set(1,2,3,4,5)
+a intersect b  // Set(3)
+a diff b       // Set(1,2)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Sets in Programming}
+\begin{itemize}
+    \item Sets are \textbf{immutable} by default in Scala (\texttt{val s = Set(1,2,3)})
+    \item \textbf{Useful for}:
+    \begin{itemize}
+        \item Ensuring unique items
+        \item Simplifying membership checks
+        \item Mathematical modeling
+    \end{itemize}
+\end{itemize}
+
+\textbf{Membership Example}:
+\begin{lstlisting}
+val fruits = Set("apple", "pear", "banana")
+fruits.contains("pear")   // true
+fruits.contains("mango")  // false
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Functions as Mathematical Relations}
+\begin{itemize}
+    \item A \textbf{function} is a relation mapping \textbf{each element} of set A to \textbf{exactly one element} in set B.
+    \item \textbf{Notation}: $f : A \rightarrow B$
+    \item \textbf{Example}: $f(x) = x^2$ for $x \in \mathbb{R}$
+\end{itemize}
+
+\textbf{Scala Example}:
+\begin{lstlisting}
+def sq(x: Double): Double = x * x
+// sq(3) = 9.0
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Injective, Surjective, Bijective}
+\begin{itemize}
+    \item \textbf{Injective (One-to-One)}: $f(a)=f(b) \Rightarrow a=b$
+    \item \textbf{Surjective (Onto)}: Every element in B is $f(a)$ for some $a$
+    \item \textbf{Bijective}: Both injective and surjective
+\end{itemize}
+
+\textbf{Scala Mapping Example}:
+\begin{lstlisting}
+val nums = Set(1,2,3)
+val double = nums.map(_ * 2) // Set(2,4,6) – injective
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Set Theory in Programming Practice}
+\begin{itemize}
+    \item \textbf{Handling uniqueness}: Ensures no duplicate user IDs, transactions, etc.
+    \item \textbf{Operations}: Filtering, merging datasets, avoiding redundancy
+    \item \textbf{Programming}: Set APIs simplify logic over lists or arrays
+\end{itemize}
+Immutability of sets aligns with functional programming principles
+\end{frame}
+
+\begin{frame}{Logic Fundamentals: Propositions \& Connectives}
+\begin{itemize}
+    \item A \textbf{proposition} is a statement that is either \textbf{true} or \textbf{false}
+    \item \textbf{Connectives}:
+    \begin{itemize}
+        \item And: $\wedge$
+        \item Or: $\vee$
+        \item Not: $\neg$
+        \item Implies: $\Rightarrow$
+    \end{itemize}
+\end{itemize}
+
+\textbf{Example}: $p$: "It rains", $q$: "I stay home"\\
+If $p \Rightarrow q$, then if it rains, I stay home.
+\end{frame}
+
+\begin{frame}{Truth Tables}
+\textbf{AND, OR, NOT Example}:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+$p$ & $q$ & $p \wedge q$ & $p \vee q$ & $\neg p$ \\
+\hline
+true & true & true & true & false \\
+true & false & false & true & false \\
+false & true & false & true & true \\
+false & false & false & false & true \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Scala logical example}:
+\begin{lstlisting}
+val rain = true
+val stayHome = false
+val both = rain && stayHome  // false
+val either = rain || stayHome  // true
+val notRain = !rain  // false
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Logical Operations in Scala}
+\begin{itemize}
+    \item Scala uses \texttt{\&\&} for AND, \texttt{||} for OR, \texttt{!} for NOT
+    \item Can combine conditions naturally
+\end{itemize}
+
+\begin{lstlisting}
+def canDrive(age: Int, hasLicense: Boolean): Boolean = 
+  age >= 18 && hasLicense
+
+val result = canDrive(20, true)  // true
+\end{lstlisting}
+
+\caution{Logic underpins conditional expressions and error handling.}
+\end{frame}
+
+\begin{frame}{De Morgan's Laws}
+\begin{itemize}
+    \item $\neg(A \wedge B) \equiv (\neg A \vee \neg B)$
+    \item $\neg(A \vee B) \equiv (\neg A \wedge \neg B)$
+\end{itemize}
+
+\textit{Helps transform logical conditions in coding!}
+
+\begin{lstlisting}
+// Checking that either x or y is not zero
+if (!(x == 0 && y == 0)) { ... }
+// Equivalent to:
+if (x != 0 || y != 0) { ... }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Predicate Logic in Programming}
+\begin{itemize}
+    \item \textbf{Predicate}: Function that returns true/false for inputs
+\end{itemize}
+
+\textbf{Example in Scala}:
+\begin{lstlisting}
+def isEven(x: Int): Boolean = x % 2 == 0
+
+val numbers = List(1,2,3,4)
+numbers.filter(isEven)  // List(2,4)
+\end{lstlisting}
+
+Predicate logic enables data filtering, validation, searching...
+\end{frame}
+
+\begin{frame}{Abstract Algebra: Groups, Rings, Fields}
+\textbf{Definitions}:
+\begin{itemize}
+    \item \textbf{Group}: Set + operation (associative, identity element, inverse, closed)
+    \item \textbf{Ring}: Group + a second operation (addition \& multiplication, etc.)
+    \item \textbf{Field}: Ring where multiplication has inverses (except 0)
+\end{itemize}
+
+E.g., Integers form a group under addition; real numbers (excluding 0) form a group under multiplication.
+\end{frame}
+
+\begin{frame}{Key Algebraic Properties}
+\begin{itemize}
+    \item \textbf{Associativity}: $(a * b) * c = a * (b * c)$
+    \item \textbf{Commutativity}: $a + b = b + a$
+    \item \textbf{Identity element}: $a * e = a$
+    \item \textbf{Inverse}: $a + (-a) = 0$
+\end{itemize}
+
+\textbf{Code Example}:
+\begin{lstlisting}
+val res1 = (2 + 3) + 4  // 9
+val res2 = 2 + (3 + 4)  // 9
+\end{lstlisting}
+
+Associativity in action!
+\end{frame}
+
+\begin{frame}{Algebraic Principles in Code}
+\begin{itemize}
+    \item \textbf{Immutability}: Operations return new objects, original remain unchanged
+    \item \textbf{Identify operations behaving like algebraic structures}:
+    \begin{itemize}
+        \item String concatenation: \textbf{Monoid} (associative, has identity "")
+        \item Number addition: \textbf{Group}
+    \end{itemize}
+\end{itemize}
+
+\begin{lstlisting}
+val s = "Hello"
+val t = s + "World"
+val u = t + ""  // "" is identity
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Function Composition}
+\begin{itemize}
+    \item \textbf{Compose}: Combines two functions (f \& g) to create a new function.
+    \item \textbf{Notation}: $(f \circ g)(x) = f(g(x))$
+\end{itemize}
+
+\textbf{Scala Composition Example}:
+\begin{lstlisting}
+val f: Int => Int = _ + 1
+val g: Int => Int = _ * 2
+val fg = f compose g  // fg(x) = f(g(x))
+fg(3)  // 7
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Equivalence Relations}
+\begin{itemize}
+    \item \textbf{Equivalence relation}: relation that is reflexive, symmetric, transitive
+    \item \textbf{Example}: $a \equiv b \mod 3$ (a and b leave same remainder when divided by 3)
+\end{itemize}
+
+\begin{lstlisting}
+def equivMod3(a: Int, b: Int): Boolean = 
+  (a % 3) == (b % 3)
+equivMod3(4, 7)  // true
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Algebraic Properties in Programming}
+\begin{itemize}
+    \item \textbf{Pure functions}: No side effects, always same output for input – like mathematical functions
+    \item \textbf{Immutability}: Operations do not alter original values, matching algebraic structures
+\end{itemize}
+
+\begin{lstlisting}
+val a = List(1,2,3)
+val b = a.map(_ * 2)  // New list, a unchanged
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Immutability: A Mathematical Perspective}
+\begin{itemize}
+    \item Sets and algebraic structures are immutable by definition
+    \item Functional programming leverages this to ensure predictable, thread-safe code
+\end{itemize}
+
+\textbf{In Scala}:
+\begin{lstlisting}
+val original = Set(1,2,3)
+val added = original + 4  // original remains {1,2,3}, 
+                          // added is {1,2,3,4}
+\end{lstlisting}
+
+Immutability is at the heart of functional programming.
+\end{frame}
+
+\begin{frame}{Functions, Relations, and Immutability}
+\begin{itemize}
+    \item Use relations and functions to model software logic
+    \item Avoid side effects to preserve functional purity
+\end{itemize}
+
+\begin{lstlisting}
+def square(x: Int): Int = x * x
+\end{lstlisting}
+
+\textbf{Functional purity} is closely related to the mathematical definition of functions.
+\end{frame}
+
+\begin{frame}{Week 1 Recap: Mathematical Foundations}
+\begin{itemize}
+    \item Sets and set operations model unique collections
+    \item Logic is the backbone of code correctness
+    \item Abstract algebraic structures help reason about code organization
+    \item Immutability and pure functions are core to functional design
+    \item Mathematical rigor = reliable code
+\end{itemize}
+
+\textbf{Next}: Bringing mathematics to life in Scala!
+\end{frame}
+
+\begin{frame}{Reflect: Where Do You See Mathematics in Code?}
+\begin{itemize}
+    \item Think of examples from your own programming where uniqueness, composition, or logical conditions are essential.
+    \item Share with the class: How does mathematics clarify programming?
+\end{itemize}
+
+\tip{Building intuition is key—don't just memorize!}
+\end{frame}
+
+\end{document}
