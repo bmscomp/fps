@@ -1,0 +1,335 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{graphicx}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{Exercise \thesection:}{1em}{}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  tabsize=2,
+  language=Scala
+}
+\title{\textbf{Error Handling Exercises in Scala}}
+\author{\textbf{Said BOUDJELDA}\\ \textbf{Paris-Panthéon-Assas University}}
+% \titlegraphic{\includegraphics[width=5cm]{logo}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+  \includegraphics[width=5cm]{logo}
+\end{center}
+
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This document contains 30 exercises designed to teach error handling techniques in Scala 3. The exercises progress from basic exception handling to advanced functional error handling patterns using types like \texttt{Option}, \texttt{Either}, \texttt{Try}, and custom error types.
+
+Each exercise includes a problem statement, expected behavior, and hints for implementation. The exercises are organized by difficulty and concept complexity.
+
+\section{Basic Exception Handling (Exercises 1-8)}
+
+\subsection{Exercise 1: Basic Try-Catch}
+\textbf{Problem:} Write a function \texttt{safeDivide(a: Int, b: Int): String} that performs integer division and returns either the result as a string or an error message if division by zero occurs.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+safeDivide(10, 2) // "5"
+safeDivide(10, 0) // "Error: Division by zero"
+\end{lstlisting}
+
+\textbf{Hint:} Use a try-catch block to handle \texttt{ArithmeticException}.
+
+\subsection{Exercise 2: Multiple Exception Types}
+\textbf{Problem:} Create a function \texttt{parseAndDivide(numStr: String, denomStr: String): String} that parses two strings to integers and divides them, handling both parsing errors and division by zero.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+parseAndDivide("10", "2")   // "5"
+parseAndDivide("abc", "2")  // "Error: Invalid number format"
+parseAndDivide("10", "0")   // "Error: Division by zero"
+\end{lstlisting}
+
+\textbf{Hint:} Handle both \texttt{NumberFormatException} and \texttt{ArithmeticException}.
+
+\subsection{Exercise 3: Finally Block}
+\textbf{Problem:} Write a function \texttt{readFileWithCleanup(filename: String): String} that simulates reading a file and always logs "Cleanup completed" regardless of success or failure.
+
+\textbf{Expected behavior:} Should return file content on success, error message on failure, but always print cleanup message.
+
+\textbf{Hint:} Use try-catch-finally structure.
+
+\subsection{Exercise 4: Custom Exception}
+\textbf{Problem:} Define a custom exception \texttt{NegativeNumberException} and create a function \texttt{calculateSquareRoot(n: Double): Double} that throws this exception for negative inputs.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+calculateSquareRoot(16.0)  // 4.0
+calculateSquareRoot(-4.0)  // throws NegativeNumberException
+\end{lstlisting}
+
+\textbf{Hint:} Extend \texttt{Exception} class and use \texttt{throw} keyword.
+
+\subsection{Exercise 5: Exception Propagation}
+\textbf{Problem:} Create a chain of functions where \texttt{functionA} calls \texttt{functionB} which calls \texttt{functionC}. Let \texttt{functionC} throw an exception and handle it in \texttt{functionA}.
+
+\textbf{Expected behavior:} Exception should propagate through the call stack.
+
+\textbf{Hint:} Don't catch exceptions in intermediate functions.
+
+\subsection{Exercise 6: Exception with Context}
+\textbf{Problem:} Write a function \texttt{validateAge(age: Int): Unit} that throws different exceptions with descriptive messages for various invalid age scenarios (negative, zero, too old).
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+validateAge(25)   // success
+validateAge(-5)   // throws exception: "Age cannot be negative"
+validateAge(0)    // throws exception: "Age cannot be zero"
+validateAge(150)  // throws exception: "Age seems unrealistic"
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{IllegalArgumentException} with custom messages.
+
+\subsection{Exercise 7: Catching Specific vs General Exceptions}
+\textbf{Problem:} Create a function \texttt{demonstrateExceptionHierarchy()} that throws different types of exceptions and shows how catch blocks with different exception types behave.
+
+\textbf{Expected behavior:} Should demonstrate that more specific exceptions are caught before general ones.
+
+\textbf{Hint:} Order catch blocks from most specific to most general.
+
+\subsection{Exercise 8: Resource Management}
+\textbf{Problem:} Implement a function that simulates opening a database connection, performing an operation, and ensuring the connection is always closed, even if an exception occurs.
+
+\textbf{Expected behavior:} Connection should be closed regardless of operation success/failure.
+
+\textbf{Hint:} Use try-catch-finally or try-with-resources pattern.
+
+\section{Option Type (Exercises 9-14)}
+
+\subsection{Exercise 9: Basic Option Usage}
+\textbf{Problem:} Write a function \texttt{findElement(list: List[Int], target: Int): Option[Int]} that returns \texttt{Some(index)} if the element is found, \texttt{None} otherwise.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+findElement(List(1, 2, 3), 2) // Some(1)
+findElement(List(1, 2, 3), 5) // None
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{zipWithIndex} and \texttt{find}.
+
+\subsection{Exercise 10: Option Chaining}
+\textbf{Problem:} Create a function \texttt{processUser(userId: String): Option[String]} that chains multiple operations: finding user, getting their email, and formatting it. Each step might fail.
+
+\textbf{Expected behavior:} Should return \texttt{None} if any step fails, formatted email if all succeed.
+
+\textbf{Hint:} Use \texttt{flatMap} for chaining operations that return \texttt{Option}.
+
+\subsection{Exercise 11: Option with Default Values}
+\textbf{Problem:} Write a function \texttt{getConfigValue(key: String): String} that looks up configuration values and returns a default if not found.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+getConfigValue("timeout")     // "30" (found)
+getConfigValue("nonexistent") // "default" (not found)
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{getOrElse} method.
+
+\subsection{Exercise 12: Combining Multiple Options}
+\textbf{Problem:} Create a function \texttt{calculateTotal(price: Option[Double], tax: Option[Double], discount: Option[Double]): Option[Double]} that calculates total only if all values are present.
+
+\textbf{Expected behavior:} Returns \texttt{Some(total)} if all inputs are \texttt{Some}, \texttt{None} if any is \texttt{None}.
+
+\textbf{Hint:} Use for-comprehension or \texttt{map3}.
+
+\subsection{Exercise 13: Option to Either Conversion}
+\textbf{Problem:} Write a function \texttt{optionToEither[A](opt: Option[A], errorMsg: String): Either[String, A]} that converts an \texttt{Option} to \texttt{Either} with a custom error message.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+optionToEither(Some(42), "error")     // Right(42)
+optionToEither(None, "not found")     // Left("not found")
+\end{lstlisting}
+
+\textbf{Hint:} Use pattern matching or \texttt{toRight} method.
+
+\subsection{Exercise 14: Filtering Options}
+\textbf{Problem:} Create a function \texttt{validatePositive(numbers: List[Option[Int]]): List[Int]} that extracts only positive numbers from a list of optional integers.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+validatePositive(List(Some(5), None, Some(-3), Some(0), Some(10)))
+// List(5, 10)
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{flatten} and \texttt{filter}.
+
+\section{Either Type (Exercises 15-20)}
+
+\subsection{Exercise 15: Basic Either Usage}
+\textbf{Problem:} Write a function \texttt{safeParseInt(str: String): Either[String, Int]} that parses a string to integer, returning error message on failure.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+safeParseInt("123")  // Right(123)
+safeParseInt("abc")  // Left("Invalid number format")
+\end{lstlisting}
+
+\textbf{Hint:} Use try-catch and return appropriate \texttt{Either} values.
+
+\subsection{Exercise 16: Either Chaining}
+\textbf{Problem:} Create a validation pipeline: \texttt{validateAndProcess(input: String): Either[String, String]} that validates input length, converts to uppercase, and adds prefix. Each step can fail.
+
+\textbf{Expected behavior:} Should return first error encountered or final processed string.
+
+\textbf{Hint:} Use \texttt{flatMap} for chaining \texttt{Either} operations.
+
+\subsection{Exercise 17: Accumulating Errors}
+\textbf{Problem:} Write a function \texttt{validateForm(name: String, email: String, age: String): Either[List[String], User]} that validates all fields and accumulates all validation errors.
+
+\textbf{Expected behavior:} Should return all validation errors, not just the first one.
+
+\textbf{Hint:} Use \texttt{Validated} type or manual error accumulation.
+
+\subsection{Exercise 18: Either Bimap}
+\textbf{Problem:} Create a function \texttt{processResult(result: Either[Exception, Int]): Either[String, String]} that transforms both error and success cases.
+
+\textbf{Expected behavior:} Convert exception to string message and integer to formatted string.
+
+\textbf{Hint:} Use \texttt{bimap} or separate \texttt{map} and \texttt{left.map}.
+
+\subsection{Exercise 19: Either Recovery}
+\textbf{Problem:} Write a function \texttt{withFallback(primary: Either[String, Int], fallback: Either[String, Int]): Either[String, Int]} that tries primary operation and falls back to secondary if primary fails.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+withFallback(Left("error"), Right(42))    // Right(42)
+withFallback(Right(10), Right(42))        // Right(10)
+withFallback(Left("error1"), Left("error2")) // Left("error2")
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{orElse} or pattern matching.
+
+\subsection{Exercise 20: Either Partitioning}
+\textbf{Problem:} Create a function \texttt{partitionResults(results: List[Either[String, Int]]): (List[String], List[Int])} that separates successes and failures.
+
+\textbf{Expected behavior:} Returns tuple of all errors and all successes.
+
+\textbf{Hint:} Use \texttt{partitionMap} or manual partitioning.
+
+\section{Try Type (Exercises 21-24)}
+
+\subsection{Exercise 21: Basic Try Usage}
+\textbf{Problem:} Write a function \texttt{safeDivisionTry(a: Int, b: Int): Try[Int]} that performs division using \texttt{Try} type.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+safeDivisionTry(10, 2)  // Success(5)
+safeDivisionTry(10, 0)  // Failure(ArithmeticException)
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{Try} constructor or \texttt{Try.apply}.
+
+\subsection{Exercise 22: Try Chaining}
+\textbf{Problem:} Create a function \texttt{parseAndSquare(str: String): Try[Int]} that parses string to integer and squares it.
+
+\textbf{Expected behavior:} Should handle parsing errors gracefully.
+
+\textbf{Hint:} Use \texttt{flatMap} to chain \texttt{Try} operations.
+
+\subsection{Exercise 23: Try Recovery}
+\textbf{Problem:} Write a function \texttt{readFileWithDefault(filename: String): Try[String]} that attempts to read a file and provides a default content if reading fails.
+
+\textbf{Expected behavior:} Should recover from file reading exceptions.
+
+\textbf{Hint:} Use \texttt{recover} or \texttt{recoverWith} methods.
+
+\subsection{Exercise 24: Try to Either Conversion}
+\textbf{Problem:} Create a function \texttt{tryToEither[T](t: Try[T]): Either[String, T]} that converts \texttt{Try} to \texttt{Either} with exception message as error.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+tryToEither(Success(42))           // Right(42)
+tryToEither(Failure(exception))    // Left(exception.getMessage)
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{toEither} method or pattern matching.
+
+\section{Advanced Error Handling (Exercises 25-30)}
+
+\subsection{Exercise 25: Custom Error ADT}
+\textbf{Problem:} Define a sealed trait \texttt{ValidationError} with specific error types (\texttt{EmptyField}, \texttt{InvalidFormat}, \texttt{OutOfRange}) and create a validation function using this ADT.
+
+\textbf{Expected behavior:} Should use custom error types instead of strings.
+
+\textbf{Hint:} Use sealed trait and case objects/classes for different error types.
+
+\subsection{Exercise 26: Error Handling Monad Stack}
+\textbf{Problem:} Create a function that works with \texttt{Either[String, Option[Int]]} and implements operations on this nested structure.
+
+\textbf{Expected behavior:} Should handle both absence of values and errors.
+
+\textbf{Hint:} Use monad transformers or nested \texttt{flatMap} operations.
+
+\subsection{Exercise 27: Parallel Error Handling}
+\textbf{Problem:} Write a function that performs multiple independent operations in parallel and collects all results, handling errors appropriately.
+
+\textbf{Expected behavior:} Should not fail fast but collect all results/errors.
+
+\textbf{Hint:} Use \texttt{Future} with \texttt{Either} or \texttt{Validated}.
+
+\subsection{Exercise 28: Resource Safety with Cats Effect}
+\textbf{Problem:} Implement a function using Cats Effect's \texttt{Resource} to safely manage file operations with proper cleanup.
+
+\textbf{Expected behavior:} Should guarantee resource cleanup even if operations fail.
+
+\textbf{Hint:} Use \texttt{Resource.make} with acquisition and release functions.
+
+\subsection{Exercise 29: Error Logging and Metrics}
+\textbf{Problem:} Create an error handling wrapper that logs errors and updates metrics while preserving the original error handling behavior.
+
+\textbf{Expected behavior:} Should add observability without changing error semantics.
+
+\textbf{Hint:} Use higher-order functions and side effects for logging.
+
+\subsection{Exercise 30: Domain-Specific Error Handling}
+\textbf{Problem:} Design a complete error handling strategy for a banking system that handles various types of errors (insufficient funds, account not found, network errors) with appropriate retry logic and user-friendly messages.
+
+\textbf{Expected behavior:} Should demonstrate enterprise-level error handling patterns.
+
+\textbf{Hint:} Combine multiple error handling techniques and consider user experience.
+
+\section{Conclusion}
+
+These exercises cover the full spectrum of error handling in Scala 3, from basic exception handling to advanced functional programming patterns. Practice implementing each exercise and experiment with different approaches to understand the trade-offs between different error handling strategies.
+
+Key takeaways:
+\begin{itemize}
+\item Use exceptions for truly exceptional cases
+\item Prefer \texttt{Option} for operations that might not return a value
+\item Use \texttt{Either} when you need to provide error information
+\item \texttt{Try} is useful for operations that might throw exceptions
+\item Custom error types provide better type safety and documentation
+\item Consider the caller's needs when choosing error handling strategies
+\end{itemize}
+
+\end{document}

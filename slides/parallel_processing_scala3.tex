@@ -1,0 +1,1205 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{qrcode}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+
+% Define Scala syntax highlighting
+\lstdefinestyle{scalaStyle}{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{brown},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+\definecolor{scalared}{RGB}{215,50,58}
+\definecolor{darkblue}{RGB}{0,0,139}
+\definecolor{pureblue}{RGB}{0,82,155}
+\definecolor{impurered}{RGB}{186,0,13}
+\definecolor{titleblue}{RGB}{0,82,155}
+\definecolor{alertred}{RGB}{186,0,13}
+\definecolor{darkgray}{RGB}{80,80,80}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title[Parallel Processing in Scala 3]
+{Functional programming with Scala 3}
+
+\subtitle{Parallel Processing and Concurrency}
+
+\author[Said BOUDJELDA]
+{Said BOUDJELDA}
+
+\institute[efrei]
+{
+  Senior Software Engineer @SCIAM\\
+  Email : mohamed-said.boudjelda@intervenants.efrei.net \\ 
+  Follow me on GitHub @bmscomp
+}
+
+\date[efrei 2025]
+{Course, May 2025}
+
+\logo{\includegraphics[height=0.6cm]{logo}}
+
+\newcommand{\chapterpage}[2]{
+  \begin{frame}[plain]
+    \centering
+    \vfill
+    {\usebeamerfont{title}\usebeamercolor[fg]{title}Chapter #1\\}
+    \vspace{0.5cm}
+    {\usebeamerfont{subtitle}#2}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Course Overview}
+
+\begin{itemize}
+\item \textbf{Parallel vs Concurrent Programming}
+\item \textbf{Scala 3 Collections Parallel Processing}
+\item \textbf{Future and Promise}
+\item \textbf{Async/Await Pattern}
+\item \textbf{Actors with Akka}
+\item \textbf{Functional Reactive Programming}
+\item \textbf{ZIO for Effect Management}
+\item \textbf{Performance Optimization}
+\item \textbf{Best Practices and Patterns}
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{What is Parallel Processing?}
+
+\textbf{Parallel Processing} is the simultaneous execution of multiple computations to solve a problem faster.
+
+\vspace{1em}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\textbf{Key Characteristics:}
+\begin{itemize}
+\item Multiple CPU cores
+\item True simultaneity
+\item Data decomposition
+\item Independent tasks
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Benefits:}
+\begin{itemize}
+\item Faster execution
+\item Better resource utilization
+\item Scalability
+\item Throughput improvement
+\end{itemize}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Parallel vs Concurrent}
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspect} & \textbf{Parallel} & \textbf{Concurrent} \\
+\hline
+Execution & Simultaneous & Interleaved \\
+\hline
+Hardware & Multiple cores & Single/Multiple cores \\
+\hline
+Goal & Speed up computation & Manage multiple tasks \\
+\hline
+Example & Matrix multiplication & Web server handling requests \\
+\hline
+Complexity & Data decomposition & Synchronization \\
+\hline
+\end{tabular}
+\end{table}
+
+\vspace{1em}
+\textbf{In Scala 3:} We can achieve both through functional programming patterns!
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Sequential vs Parallel Example}
+
+\begin{lstlisting}[style=scalaStyle]
+// Sequential processing
+val numbers = (1 to 1000000).toList
+val sequential = numbers.map(_ * 2).filter(_ > 100)
+
+// Parallel processing
+val parallel = numbers.par.map(_ * 2).filter(_ > 100)
+
+// Measuring performance
+import scala.util.Random
+val data = List.fill(1000000)(Random.nextInt(100))
+
+// Sequential: ~200ms
+val start1 = System.currentTimeMillis()
+val result1 = data.map(math.sqrt).sum
+val time1 = System.currentTimeMillis() - start1
+
+// Parallel: ~50ms (on 4-core machine)
+val start2 = System.currentTimeMillis()
+val result2 = data.par.map(math.sqrt).sum
+val time2 = System.currentTimeMillis() - start2
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{1}{Parallel Collections in Scala 3}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Parallel Collections Overview}
+
+Scala provides parallel collections that automatically distribute work across available CPU cores.
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.collection.parallel.CollectionConverters._
+
+// Converting to parallel collections
+val list = (1 to 1000).toList.par
+val vector = (1 to 1000).toVector.par
+
+// All standard collection operations work
+val result = list.map(_ * 2).filter(_ > 100).sum
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Parallel Collection Operations}
+
+\begin{lstlisting}[style=scalaStyle]
+val data = (1 to 1000).par
+
+// Map and filter operations
+val processed = data.map(_ * 2).filter(_ % 2 == 0)
+
+// Reduce operations - require associative functions
+val sum = data.reduce(_ + _)
+val max = data.reduce(_ max _)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Custom Parallel Operations}
+
+\begin{lstlisting}[style=scalaStyle]
+// Parallel matrix multiplication
+def multiply(a: Array[Array[Int]], b: Array[Array[Int]]) = {
+  (0 until a.length).par.map { i =>
+    (0 until b(0).length).map { j =>
+      (0 until a(0).length).map(k => a(i)(k) * b(k)(j)).sum
+    }.toArray
+  }.toArray
+}
+
+// Parallel Monte Carlo Pi estimation
+def estimatePi(n: Int) = (1 to n).par
+  .count(_ => math.random*math.random + math.random*math.random <= 1) * 4.0 / n
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{2}{Futures and Promises}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Introduction to Futures}
+
+\textbf{Future} represents a computation that may complete in the future.
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.concurrent.{Future, ExecutionContext}
+import scala.util.{Success, Failure}
+
+// Implicit execution context for async operations
+given ExecutionContext = ExecutionContext.global
+
+// Creating futures
+val future1: Future[Int] = Future {
+  Thread.sleep(1000)
+  42
+}
+
+val future2: Future[String] = Future {
+  "Hello, World!"
+}
+
+// Handling completion
+future1.onComplete {
+  case Success(value) => println(s"Result: $value")
+  case Failure(exception) => println(s"Failed: $exception")
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Future Composition}
+
+\begin{lstlisting}[style=scalaStyle]
+// Chaining futures with for-comprehension
+val computation = for {
+  x <- Future(10)
+  y <- Future(20)
+  z <- Future(x + y)
+} yield z * 2
+
+// Parallel execution with Future.sequence
+val futures = List(Future(1), Future(2), Future(3))
+val allResults: Future[List[Int]] = Future.sequence(futures)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Handling with Futures}
+
+\begin{lstlisting}[style=scalaStyle]
+// Recovering from failures
+val riskyComputation = Future {
+  if (scala.util.Random.nextBoolean()) throw new Exception("Error")
+  else 42
+}
+
+val recovered = riskyComputation.recover {
+  case _: Exception => 0
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Promises}
+
+\textbf{Promise} is a writable, single-assignment container that completes a Future.
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.concurrent.Promise
+
+// Creating a promise
+val promise = Promise[Int]()
+val future = promise.future
+
+// Completing the promise
+promise.success(42)
+// or promise.failure(new Exception("Failed"))
+
+// Practical example: timeout
+def withTimeout[T](future: Future[T], timeout: Duration): Future[T] = {
+  val promise = Promise[T]()
+  
+  future.onComplete(promise.tryComplete)
+  
+  Future {
+    Thread.sleep(timeout.toMillis)
+    promise.tryFailure(new TimeoutException())
+  }
+  
+  promise.future
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{3}{Async/Await Pattern}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Async/Await in Scala 3}
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.async.Async.{async, await}
+
+// Traditional future composition
+def traditionalWay(): Future[String] = {
+  fetchUser(1).flatMap { user =>
+    fetchPosts(user.id).flatMap { posts =>
+      fetchComments(posts.head.id).map { comments =>
+        s"User ${user.name} has ${comments.length} comments"
+      }
+    }
+  }
+}
+
+// With async/await - more readable
+def asyncAwaitWay(): Future[String] = async {
+  val user = await(fetchUser(1))
+  val posts = await(fetchPosts(user.id))
+  val comments = await(fetchComments(posts.head.id))
+  s"User ${user.name} has ${comments.length} comments"
+}
+
+// Parallel execution with async/await
+def parallelAsyncWay(): Future[String] = async {
+  val userFuture = fetchUser(1)
+  val settingsFuture = fetchSettings(1)
+  
+  val user = await(userFuture)
+  val settings = await(settingsFuture)
+  
+  s"${user.name}: ${settings.theme}"
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{4}{Actor Model with Akka}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Introduction to Actors}
+
+\textbf{Actor Model} provides a higher-level abstraction for concurrent and distributed programming.
+
+\begin{lstlisting}[style=scalaStyle]
+import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.scaladsl.Behaviors
+
+// Define actor messages and behavior
+sealed trait CounterMessage
+case object Increment extends CounterMessage
+case class GetValue(replyTo: ActorRef[Int]) extends CounterMessage
+
+def counter(value: Int): Behavior[CounterMessage] = 
+  Behaviors.receive { (_, message) =>
+    message match {
+      case Increment => counter(value + 1)
+      case GetValue(replyTo) => replyTo ! value; Behaviors.same
+    }
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Parallel Processing with Actors}
+
+\begin{lstlisting}[style=scalaStyle]
+// Worker actor for parallel computation
+case class ProcessChunk(data: List[Int], replyTo: ActorRef[Int])
+
+def worker(): Behavior[ProcessChunk] = 
+  Behaviors.receive { (_, ProcessChunk(data, replyTo)) =>
+    replyTo ! data.map(_ * 2).sum
+    Behaviors.same
+  }
+
+// Distribute work to multiple workers
+val workers = (1 to 4).map(_ => spawn(worker())).toList
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{5}{ZIO for Effect Management}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Introduction to ZIO}
+
+\textbf{ZIO} is a functional effect system for Scala that provides powerful abstractions for concurrent and parallel programming.
+
+\begin{lstlisting}[style=scalaStyle]
+import zio._
+
+// Basic ZIO effects
+val simpleEffect: UIO[Int] = ZIO.succeed(42)
+val failingEffect: IO[String, Nothing] = ZIO.fail("Error")
+
+// Parallel collection processing
+val numbers = (1 to 1000).toList
+val result = ZIO.foreachPar(numbers)(n => ZIO.succeed(n * n))
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Fibers - Lightweight Threads}
+
+\begin{lstlisting}[style=scalaStyle]
+// Creating and managing fibers
+val fiber1 = ZIO.succeed(expensiveComputation()).fork
+val fiber2 = ZIO.succeed(anotherComputation()).fork
+
+val parallel = for {
+  f1 <- fiber1
+  f2 <- fiber2
+  result1 <- f1.join
+  result2 <- f2.join
+} yield (result1, result2)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Parallel Combinators}
+
+\begin{lstlisting}[style=scalaStyle]
+// Racing effects - first to complete wins
+val raced = ZIO.succeed(slowTask()) race ZIO.succeed(fastTask())
+
+// Parallel tuple - both must succeed
+val both = ZIO.succeed(task1()) <&> ZIO.succeed(task2())
+
+// Parallel validation with error accumulation
+val validation = ZIO.validatePar(
+  validateEmail("user@test.com"),
+  validateAge(25)
+)((email, age) => User(email, age))
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Error Handling}
+
+\begin{lstlisting}[style=scalaStyle]
+// Catching and recovering from errors
+val recovered = riskyOperation()
+  .catchAll(error => ZIO.succeed(defaultValue))
+
+// Retry with exponential backoff
+val retried = riskyOperation()
+  .retry(Schedule.exponential(1.second) && Schedule.recurs(3))
+
+// Timeout operations
+val withTimeout = longRunningTask().timeout(30.seconds)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Resource Management}
+
+\begin{lstlisting}[style=scalaStyle]
+// Automatic resource cleanup with ZIO.scoped
+val fileProcessing = ZIO.scoped {
+  for {
+    file <- ZIO.fromAutoCloseable(ZIO.attempt(openFile("data.txt")))
+    content <- ZIO.attempt(file.readAll())
+    processed <- ZIO.succeed(content.toUpperCase)
+  } yield processed
+}
+
+// Resources are automatically closed even on failure
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Concurrent Data Structures}
+
+\begin{lstlisting}[style=scalaStyle]
+// Ref for safe concurrent state
+val counter = for {
+  ref <- Ref.make(0)
+  _ <- ZIO.foreachParDiscard(1 to 100)(_ => ref.update(_ + 1))
+  result <- ref.get
+} yield result
+
+// Queue for producer-consumer patterns
+val queue = Queue.bounded[String](100)
+val producer = queue.offer("message")
+val consumer = queue.take
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO STM (Software Transactional Memory)}
+
+\begin{lstlisting}[style=scalaStyle]
+import zio.stm._
+
+// Atomic transactions with STM
+val transfer = for {
+  from <- TRef.make(1000)
+  to <- TRef.make(0)
+  _ <- STM.atomically {
+    from.update(_ - 100) *> to.update(_ + 100)
+  }
+} yield ()
+
+// Composable and deadlock-free
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Scheduling}
+
+\begin{lstlisting}[style=scalaStyle]
+// Repeat operations with schedules
+val repeated = task()
+  .repeat(Schedule.fixed(1.second) && Schedule.recurs(10))
+
+// Complex scheduling patterns
+val schedule = Schedule.exponential(100.millis) 
+  && Schedule.recurs(5) 
+  && Schedule.elapsed.whileOutput(_ < 30.seconds)
+
+val scheduled = operation().retry(schedule)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Interruption and Cancellation}
+
+\begin{lstlisting}[style=scalaStyle]
+// Graceful interruption
+val interruptible = longRunningTask()
+  .onInterrupt(ZIO.succeed(println("Cleaning up...")))
+
+// Racing with timeout
+val raceWithTimeout = task() race ZIO.sleep(5.seconds)
+
+// Uninterruptible critical sections
+val critical = criticalOperation().uninterruptible
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Testing}
+
+\begin{lstlisting}[style=scalaStyle]
+import zio.test._
+
+// ZIO Test framework
+val spec = test("parallel processing") {
+  for {
+    result <- ZIO.foreachPar(1 to 100)(n => ZIO.succeed(n * 2))
+    expected = (1 to 100).map(_ * 2).toList
+  } yield assertTrue(result == expected)
+}
+
+// Built-in test aspects for timeouts, retries, etc.
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Layers and Dependency Injection}
+
+\begin{lstlisting}[style=scalaStyle]
+// Service definition
+trait UserService {
+  def getUser(id: Int): UIO[User]
+}
+
+// Layer providing the service
+val userServiceLayer = ZLayer.succeed(new UserService {
+  def getUser(id: Int) = ZIO.succeed(User(id, "John"))
+})
+
+// Using the service
+val program = ZIO.serviceWithZIO[UserService](_.getUser(1))
+  .provide(userServiceLayer)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Streaming}
+
+\begin{lstlisting}[style=scalaStyle]
+import zio.stream._
+
+// Creating and processing streams
+val stream = ZStream.fromIterable(1 to 1000)
+  .mapZIOPar(8)(n => ZIO.succeed(n * n))
+  .take(100)
+
+// Merging streams
+val merged = stream1.merge(stream2)
+
+// Error handling in streams
+val resilient = stream.catchAll(_ => ZStream.empty)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{6}{Functional Reactive Programming}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Reactive Streams with Akka Streams}
+
+\begin{lstlisting}[style=scalaStyle]
+import akka.stream._
+import akka.stream.scaladsl._
+import akka.NotUsed
+
+// Simple stream processing
+val source: Source[Int, NotUsed] = Source(1 to 1000000)
+val flow: Flow[Int, Int, NotUsed] = Flow[Int].map(_ * 2)
+val sink: Sink[Int, Future[Done]] = Sink.foreach(println)
+
+val graph = source.via(flow).to(sink)
+
+// Parallel processing with streams
+val parallelFlow = Flow[Int].mapAsyncUnordered(parallelism = 4) { n =>
+  Future {
+    Thread.sleep(100) // Simulate work
+    n * n
+  }
+}
+
+val parallelStream = source
+  .via(parallelFlow)
+  .to(Sink.fold(0)(_ + _))
+
+// Backpressure handling
+val backpressureFlow = Flow[Int]
+  .buffer(1000, OverflowStrategy.backpressure)
+  .map(expensiveComputation)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ZIO Streams}
+
+\begin{lstlisting}[style=scalaStyle]
+import zio.stream._
+
+// Creating streams
+val stream1 = ZStream.fromIterable(1 to 1000000)
+val stream2 = ZStream.repeatEffect(ZIO.succeed(scala.util.Random.nextInt()))
+
+// Parallel processing
+val parallelStream = stream1
+  .mapZIOPar(8)(n => ZIO.succeed(n * n))
+  .take(1000)
+
+// Merging streams
+val merged = stream1.merge(stream2)
+
+// Grouping and windowing
+val grouped = stream1
+  .groupedWithin(100, 1.second)
+  .map(_.sum)
+
+// Error handling in streams
+val resilientStream = stream1
+  .mapZIO(n => 
+    if (n % 1000 == 0) ZIO.fail(new RuntimeException("Error"))
+    else ZIO.succeed(n * 2)
+  )
+  .catchAll(_ => ZStream.empty)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{7}{Performance Optimization}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Measuring Performance}
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.concurrent.duration._
+
+// Simple timing function
+def time[T](block: => T): (T, Duration) = {
+  val start = System.nanoTime()
+  val result = block
+  val end = System.nanoTime()
+  (result, (end - start).nanos)
+}
+
+// Benchmarking parallel vs sequential
+val data = (1 to 1000000).toList
+
+val (seqResult, seqTime) = time {
+  data.map(math.sqrt).sum
+}
+
+val (parResult, parTime) = time {
+  data.par.map(math.sqrt).sum
+}
+
+println(s"Sequential: ${seqTime.toMillis}ms")
+println(s"Parallel: ${parTime.toMillis}ms")
+println(s"Speedup: ${seqTime.toMillis.toDouble / parTime.toMillis}")
+
+// JMH for precise benchmarking
+import org.openjdk.jmh.annotations._
+
+@Benchmark
+def sequentialProcessing(): Double = {
+  (1 to 100000).map(math.sqrt).sum
+}
+
+@Benchmark
+def parallelProcessing(): Double = {
+  (1 to 100000).par.map(math.sqrt).sum
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Optimization Strategies}
+
+\begin{lstlisting}[style=scalaStyle]
+// 1. Choose appropriate data structures
+val vector = Vector.fill(1000000)(scala.util.Random.nextInt())
+val array = Array.fill(1000000)(scala.util.Random.nextInt())
+
+// Arrays are faster for parallel operations
+val vectorResult = vector.par.map(_ * 2).sum
+val arrayResult = array.par.map(_ * 2).sum
+
+// 2. Minimize object allocation
+def inefficient(data: List[Int]): List[Int] = 
+  data.map(_ * 2).map(_ + 1).map(_ / 2)
+
+def efficient(data: List[Int]): List[Int] = 
+  data.map(x => (x * 2 + 1) / 2)
+
+// 3. Use appropriate parallelism level
+val customParallelism = (1 to 1000000).par
+customParallelism.tasksupport = new ForkJoinTaskSupport(
+  new java.util.concurrent.ForkJoinPool(8)
+)
+
+// 4. Avoid false sharing with padding
+case class PaddedCounter(
+  @volatile var count: Long,
+  p1: Long = 0, p2: Long = 0, p3: Long = 0, p4: Long = 0,
+  p5: Long = 0, p6: Long = 0, p7: Long = 0, p8: Long = 0
+)
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\chapterpage{8}{Best Practices and Patterns}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Common Pitfalls}
+
+\begin{lstlisting}[style=scalaStyle]
+// 1. Shared mutable state - AVOID
+var counter = 0
+(1 to 1000).par.foreach(_ => counter += 1)
+// Result is unpredictable due to race conditions
+
+// Better: Use atomic operations
+import java.util.concurrent.atomic.AtomicInteger
+val atomicCounter = new AtomicInteger(0)
+(1 to 1000).par.foreach(_ => atomicCounter.incrementAndGet())
+
+// 2. Side effects in parallel operations - AVOID
+val results = mutable.ListBuffer[Int]()
+(1 to 1000).par.foreach(x => results += x * 2)
+// Non-thread-safe collection
+
+// Better: Use functional approach
+val results = (1 to 1000).par.map(_ * 2).toList
+
+// 3. Blocking operations in async contexts - AVOID
+val future = Future {
+  Thread.sleep(5000) // Blocks thread pool
+  42
+}
+
+// Better: Use non-blocking alternatives
+val future = Future {
+  // Use async I/O libraries
+  42
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Design Patterns for Parallel Processing}
+
+\begin{lstlisting}[style=scalaStyle]
+// 1. Fork-Join Pattern
+def parallelQuickSort[T: Ordering](arr: Array[T]): Array[T] = {
+  if (arr.length <= 1000) {
+    arr.sorted
+  } else {
+    val pivot = arr(arr.length / 2)
+    val (left, right) = arr.partition(implicitly[Ordering[T]].lt(_, pivot))
+    
+    val leftFuture = Future(parallelQuickSort(left))
+    val rightFuture = Future(parallelQuickSort(right))
+    
+    for {
+      leftSorted <- leftFuture
+      rightSorted <- rightFuture
+    } yield leftSorted ++ Array(pivot) ++ rightSorted
+  }
+}
+
+// 2. Producer-Consumer Pattern
+class ProducerConsumer[T](bufferSize: Int) {
+  private val queue = new java.util.concurrent.LinkedBlockingQueue[T](bufferSize)
+  
+  def produce(item: T): Unit = queue.put(item)
+  def consume(): T = queue.take()
+  
+  def produceAsync(items: List[T]): Future[Unit] = Future {
+    items.foreach(produce)
+  }
+  
+  def consumeAsync(count: Int): Future[List[T]] = Future {
+    (1 to count).map(_ => consume()).toList
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Thread Safety Patterns}
+
+\begin{lstlisting}[style=scalaStyle]
+// 1. Immutable Data Structures
+case class ImmutableCounter(value: Int) {
+  def increment: ImmutableCounter = copy(value = value + 1)
+  def decrement: ImmutableCounter = copy(value = value - 1)
+}
+
+// 2. Thread-Safe Collections
+import scala.collection.concurrent.TrieMap
+val threadSafeMap = TrieMap[String, Int]()
+
+// 3. Functional State Management
+import cats.effect.Ref
+
+def functionalCounter(): IO[Unit] = {
+  for {
+    counter <- Ref.of[IO, Int](0)
+    _ <- (1 to 1000).toList.parTraverse(_ => counter.update(_ + 1))
+    finalValue <- counter.get
+    _ <- IO.println(s"Final value: $finalValue")
+  } yield ()
+}
+
+// 4. Software Transactional Memory (STM)
+import scala.concurrent.stm._
+
+val stmCounter = Ref(0)
+
+def incrementSTM(): Unit = atomic { implicit txn =>
+  stmCounter() = stmCounter() + 1
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Resource Management}
+
+\begin{lstlisting}[style=scalaStyle]
+// 1. Proper ExecutionContext management
+val customEC = ExecutionContext.fromExecutor(
+  java.util.concurrent.Executors.newFixedThreadPool(8)
+)
+
+// Always shutdown when done
+Runtime.getRuntime.addShutdownHook(new Thread(() => {
+  customEC.shutdown()
+}))
+
+// 2. Using ZIO for automatic resource management
+def processFilesConcurrently(files: List[String]): ZIO[Any, Throwable, List[String]] = {
+  ZIO.foreachPar(files) { filename =>
+    ZIO.scoped {
+      for {
+        source <- ZIO.fromAutoCloseable(ZIO.attempt(scala.io.Source.fromFile(filename)))
+        content <- ZIO.attempt(source.mkString)
+        processed <- ZIO.succeed(content.toUpperCase)
+      } yield processed
+    }
+  }
+}
+
+// 3. Cats Effect Resource
+import cats.effect.Resource
+
+def databaseResource: Resource[IO, Database] = 
+  Resource.make(IO(Database.connect()))(db => IO(db.close()))
+
+val program = databaseResource.use { db =>
+  (1 to 100).toList.parTraverse(id => IO(db.query(id)))
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Testing Parallel Code}
+
+\begin{lstlisting}[style=scalaStyle]
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import scala.concurrent.duration._
+
+class ParallelProcessingSpec extends AnyFlatSpec with Matchers {
+  
+  "Parallel processing" should "produce correct results" in {
+    val data = (1 to 1000).toList
+    val sequential = data.map(_ * 2).sum
+    val parallel = data.par.map(_ * 2).sum
+    
+    parallel shouldEqual sequential
+  }
+  
+  "Future composition" should "handle errors properly" in {
+    val future = for {
+      x <- Future.successful(10)
+      y <- Future.failed(new RuntimeException("Test error"))
+      z <- Future.successful(20)
+    } yield x + z
+    
+    future.failed.futureValue shouldBe a[RuntimeException]
+  }
+  
+  "ZIO effects" should "be testable" in {
+    val effect = for {
+      ref <- Ref.make(0)
+      _ <- ZIO.foreachParDiscard(1 to 100)(_ => ref.update(_ + 1))
+      result <- ref.get
+    } yield result
+    
+    val runtime = Runtime.default
+    val result = Unsafe.unsafe { implicit unsafe =>
+      runtime.unsafe.run(effect).getOrThrowFiberFailure()
+    }
+    
+    result shouldEqual 100
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Performance Guidelines}
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Scenario} & \textbf{Recommended Approach} & \textbf{Reason} \\
+\hline
+CPU-intensive tasks & Parallel collections & Utilizes all cores \\
+\hline
+I/O operations & Futures/ZIO & Non-blocking \\
+\hline
+Stream processing & Akka Streams/ZIO Streams & Backpressure \\
+\hline
+Actor systems & Akka Typed & Message passing \\
+\hline
+Complex workflows & ZIO & Composable effects \\
+\hline
+Simple parallelism & .par collections & Easy to use \\
+\hline
+\end{tabular}
+\end{table}
+
+\vspace{1em}
+
+\textbf{Key Metrics to Monitor:}
+\begin{itemize}
+\item CPU utilization
+\item Memory usage
+\item Thread pool saturation
+\item Garbage collection pressure
+\item Latency percentiles
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Summary}
+
+\textbf{Key Takeaways:}
+
+\begin{itemize}
+\item \textbf{Choose the right tool:} Collections.par for simple cases, Futures for async, ZIO for complex effects
+\item \textbf{Embrace immutability:} Avoid shared mutable state
+\item \textbf{Understand your workload:} CPU-bound vs I/O-bound
+\item \textbf{Measure performance:} Use proper benchmarking tools
+\item \textbf{Handle errors gracefully:} Parallel code can fail in complex ways
+\item \textbf{Test thoroughly:} Parallel code has subtle bugs
+\end{itemize}
+
+\vspace{1em}
+
+\textbf{ZIO Benefits:}
+\begin{itemize}
+\item Composable effects and resource management
+\item Built-in error handling and retry mechanisms
+\item Powerful concurrency primitives (fibers, STM, queues)
+\item Excellent testing support
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[allowframebreaks]{References and Further Reading}
+\footnotesize
+
+\begin{thebibliography}{15}
+\beamertemplatetextbibitems
+
+\subsection*{Foundational Papers}
+\bibitem[Hewitt, 1973]{hewitt1973}
+\textcolor{pureblue}{Hewitt, C., Bishop, P., Steiger, R.} 
+\textit{A Universal Modular ACTOR Formalism for Artificial Intelligence}. IJCAI 1973.
+\footnotesize{\\ \color{gray}Original actor model paper}
+
+\bibitem[Valiant, 1990]{valiant1990}
+\textcolor{pureblue}{Valiant, L.} 
+\textit{A Bridging Model for Parallel Computation}. Communications of the ACM, 1990.
+\footnotesize{\\ \color{gray}BSP model for parallel algorithms}
+
+\subsection*{Scala Parallel Collections}
+\bibitem[Prokopec, 2011]{prokopec2011}
+\textcolor{pureblue}{Prokopec, A., et al.} 
+\textit{A Generic Parallel Collection Framework}. Euro-Par 2011.
+\footnotesize{\\ \color{gray}Design of Scala parallel collections}
+
+\bibitem[Odersky, 2014]{odersky2014parallel}
+\textcolor{pureblue}{Odersky, M., Spoon, L., Venners, B.} 
+\textit{Programming in Scala, 3rd Edition}. Artima Press, 2014.
+\footnotesize{\\ \color{gray}Comprehensive Scala parallel programming guide}
+
+\subsection*{Actor Systems}
+\bibitem[Karmani, 2009]{karmani2009}
+\textcolor{pureblue}{Karmani, R., et al.} 
+\textit{Actor Frameworks for the JVM Platform}. PPPJ 2009.
+\footnotesize{\\ \color{gray}Comparison of JVM actor implementations}
+
+\bibitem[Bernstein, 2014]{bernstein2014}
+\textcolor{pureblue}{Bernstein, D.} 
+\textit{Akka in Action}. Manning Publications, 2014.
+\footnotesize{\\ \color{gray}Practical actor programming with Akka}
+
+\subsection*{Functional Effect Systems}
+\bibitem[De Goes, 2019]{degoes2019}
+\textcolor{pureblue}{De Goes, J.} 
+\textit{ZIO: A Type-Safe, Composable Library for Async and Concurrent Programming}. Scala Days 2019.
+\footnotesize{\\ \color{gray}Introduction to ZIO effect system}
+
+\bibitem[Spiewak, 2020]{spiewak2020}
+\textcolor{pureblue}{Spiewak, D.} 
+\textit{Cats Effect 3: Toward Fearless Concurrency}. Typelevel Summit 2020.
+\footnotesize{\\ \color{gray}Modern functional concurrency in Scala}
+
+\subsection*{Reactive Streams}
+\bibitem[Kuhn, 2015]{kuhn2015}
+\textcolor{pureblue}{Kuhn, R., et al.} 
+\textit{Reactive Streams Specification}. 2015.
+\footnotesize{\\ \color{gray}Standard for asynchronous stream processing}
+
+\bibitem[Bonér, 2016]{boner2016}
+\textcolor{pureblue}{Bonér, J., et al.} 
+\textit{Akka Streams Documentation}. Lightbend, 2016.
+\footnotesize{\\ \color{gray}Stream processing with backpressure}
+
+\subsection*{Performance and Optimization}
+\bibitem[Lea, 2000]{lea2000}
+\textcolor{pureblue}{Lea, D.} 
+\textit{Concurrent Programming in Java, 2nd Edition}. Addison-Wesley, 2000.
+\footnotesize{\\ \color{gray}JVM concurrency fundamentals}
+
+\bibitem[Goetz, 2006]{goetz2006}
+\textcolor{pureblue}{Goetz, B., et al.} 
+\textit{Java Concurrency in Practice}. Addison-Wesley, 2006.
+\footnotesize{\\ \color{gray}Practical concurrent programming patterns}
+
+\bibitem[Shipilev, 2014]{shipilev2014}
+\textcolor{pureblue}{Shipilev, A.} 
+\textit{JMH: Java Microbenchmark Harness}. Oracle, 2014.
+\footnotesize{\\ \color{gray}Accurate performance measurement}
+
+\subsection*{Modern Developments}
+\bibitem[Loom, 2021]{loom2021}
+\textcolor{pureblue}{Project Loom Team} 
+\textit{Project Loom: Fibers and Continuations for the Java Platform}. OpenJDK, 2021.
+\footnotesize{\\ \color{gray}Virtual threads for massive concurrency}
+
+\bibitem[GraalVM, 2022]{graalvm2022}
+\textcolor{pureblue}{Oracle Labs} 
+\textit{GraalVM Native Image for Scala Applications}. Oracle, 2022.
+\footnotesize{\\ \color{gray}Ahead-of-time compilation for better startup}
+
+\end{thebibliography}
+
+\end{frame}
+
+\end{document}

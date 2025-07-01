@@ -1,0 +1,789 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{qrcode}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+
+% Define Scala syntax highlighting
+\lstdefinestyle{scalaStyle}{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{brown},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+\definecolor{scalared}{RGB}{215,50,58}
+\definecolor{darkblue}{RGB}{0,0,139}
+\definecolor{pureblue}{RGB}{0,82,155}
+\definecolor{impurered}{RGB}{186,0,13}
+\definecolor{titleblue}{RGB}{0,82,155}
+\definecolor{alertred}{RGB}{186,0,13}
+\definecolor{darkgray}{RGB}{80,80,80}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title[Testing in Scala]
+{Functional programming with Scala}
+
+\subtitle{Unit and Integration Testing}
+
+\author[Said BOUDJELDA]
+{Said BOUDJELDA}
+
+\institute[efrei]
+{
+  Senior Software Engineer @SCIAM\\
+  GitHub @bmscomp
+}
+
+\date[efrei 2025]
+{efrei, 2025}
+
+\logo{\includegraphics[height=0.6cm]{logo}}
+
+\begin{document}
+
+%---------------------------------------------------------
+\frame{\titlepage}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Table of Contents}
+\tableofcontents
+\end{frame}
+
+%---------------------------------------------------------
+\section{Introduction to Testing}
+
+\begin{frame}
+\frametitle{Why Testing Matters}
+
+\begin{itemize}
+  \item \textbf{Confidence}: Code works as expected
+  \item \textbf{Regression Prevention}: Catch breaking changes
+  \item \textbf{Documentation}: Tests describe behavior
+  \item \textbf{Refactoring Safety}: Change code without fear
+  \item \textbf{Design Feedback}: Tests reveal design issues
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Good tests are your safety net}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Testing Pyramid}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Level} & \textbf{Speed} & \textbf{Scope} \\
+\hline
+Unit Tests & Fast & Single function/class \\
+\hline
+Integration Tests & Medium & Multiple components \\
+\hline
+E2E Tests & Slow & Full system \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+\textbf{Rule}: More unit tests, fewer integration tests, minimal E2E
+
+\end{frame}
+
+%---------------------------------------------------------
+\section{Scala 3 Testing Frameworks}
+
+\begin{frame}
+\frametitle{Popular Testing Frameworks}
+
+\begin{itemize}
+  \item \textbf{ScalaTest}: Most popular, many styles
+  \item \textbf{MUnit}: Lightweight, fast compilation
+  \item \textbf{uTest}: Minimal boilerplate
+  \item \textbf{Specs2}: BDD-style specifications
+  \item \textbf{ZIO Test}: For ZIO applications
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{We'll focus on ScalaTest and MUnit}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ScalaTest Setup}
+
+\begin{lstlisting}[style=scalaStyle]
+// build.sbt
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.15" % Test
+
+class CalculatorSpec extends AnyFlatSpec with Matchers:
+  "A Calculator" should "add two numbers" in {
+    val result = Calculator.add(2, 3)
+    result should be(5)
+  }
+\end{lstlisting}
+
+Basic ScalaTest structure
+
+\end{frame}
+
+%---------------------------------------------------------
+\section{Unit Testing}
+
+\begin{frame}[fragile]
+\frametitle{Testing Pure Functions}
+
+\begin{lstlisting}[style=scalaStyle]
+object MathUtils:
+  def factorial(n: Int): Int = 
+    if n <= 1 then 1 else n * factorial(n - 1)
+
+class MathUtilsSpec extends AnyFlatSpec with Matchers:
+  "factorial" should "calculate correctly" in {
+    MathUtils.factorial(5) should be(120)
+  }
+\end{lstlisting}
+
+Testing pure functions is straightforward
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Property-Based Testing}
+
+\begin{lstlisting}[style=scalaStyle]
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+
+class MathPropertiesSpec extends AnyPropSpec with ScalaCheckPropertyChecks:
+  property("addition is commutative") {
+    forAll { (a: Int, b: Int) =>
+      MathUtils.add(a, b) should equal(MathUtils.add(b, a))
+    }
+  }
+\end{lstlisting}
+
+Generate test cases automatically
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Testing with Mocks}
+
+\begin{lstlisting}[style=scalaStyle]
+trait UserRepository:
+  def findById(id: Long): Option[User]
+
+class UserServiceSpec extends AnyFlatSpec with MockitoSugar:
+  "UserService" should "find user" in {
+    val mockRepo = mock[UserRepository]
+    when(mockRepo.findById(1L)).thenReturn(Some(user))
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\section{Integration Testing}
+
+\begin{frame}
+\frametitle{Integration Testing Concepts}
+
+\begin{itemize}
+  \item \textbf{Database Integration}: Test with real/embedded DB
+  \item \textbf{HTTP Integration}: Test REST API endpoints
+  \item \textbf{Message Queues}: Test async communication
+  \item \textbf{External Services}: Test third-party integrations
+  \item \textbf{Container Testing}: Use Testcontainers
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Integration tests verify component interaction}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Database Integration Testing}
+
+\begin{lstlisting}[style=scalaStyle]
+class UserRepositoryIntegrationSpec extends AnyFlatSpec:
+  val db = Database.forConfig("h2mem")
+  val userRepo = new UserRepository(db)
+  
+  "UserRepository" should "save users" in {
+    val user = User(0L, "Alice", "alice@test.com")
+    val saved = Await.result(userRepo.save(user), 2.seconds)
+    saved.name should be("Alice")
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{HTTP API Testing}
+
+\begin{lstlisting}[style=scalaStyle]
+class UserApiSpec extends AnyFlatSpec with ScalatestRouteTest:
+  val userService = mock[UserService]
+  val routes = new UserRoutes(userService).routes
+  
+  "UserAPI" should "create user" in {
+    Post("/users", userData.parseJson) ~> routes ~> check {
+      status should be(StatusCodes.Created)
+    }
+  }
+\end{lstlisting}
+
+Test HTTP endpoints in isolation
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Testcontainers Integration}
+
+\begin{lstlisting}[style=scalaStyle]
+import com.dimafeng.testcontainers.PostgreSQLContainer
+import com.dimafeng.testcontainers.scalatest.TestContainerForEach
+
+class PostgresIntegrationSpec extends AnyFlatSpec 
+  with TestContainerForEach:
+  
+  override val containerDef = PostgreSQLContainer.Def()
+  
+  "PostgreSQL" should "work with real database" in {
+    withContainers { postgres =>
+      val userRepo = new UserRepository(postgres.jdbcUrl)
+      val result = Await.result(userRepo.save(user), 3.seconds)
+    }
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\section{Testing Best Practices}
+
+\begin{frame}
+\frametitle{Testing Best Practices}
+
+\begin{itemize}
+  \item \textbf{AAA Pattern}: Arrange, Act, Assert
+  \item \textbf{One Assertion}: Test one thing at a time
+  \item \textbf{Descriptive Names}: Clear test method names
+  \item \textbf{Independent Tests}: No test interdependence
+  \item \textbf{Fast Execution}: Keep unit tests fast
+  \item \textbf{Test Data Builders}: Use factories for setup
+  \item \textbf{Clean Resources}: Proper setup/teardown
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Good tests are readable and maintainable}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Test Data Builders}
+
+\begin{lstlisting}[style=scalaStyle]
+class UserBuilder:
+  private var name: String = "John Doe"
+  def withName(name: String): UserBuilder = { this.name = name; this }
+  def build(): User = User(1L, name, "john@example.com")
+
+// Usage: UserBuilder().withName("Alice").build()
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\section{Advanced Testing Topics}
+
+\begin{frame}[fragile]
+\frametitle{Testing Async Code}
+
+\begin{lstlisting}[style=scalaStyle]
+class AsyncServiceSpec extends AnyFlatSpec with ScalaFutures:
+  "AsyncService" should "handle futures" in {
+    val service = new AsyncUserService()
+    val futureResult = service.findUserAsync(1L)
+    
+    whenReady(futureResult) { user =>
+      user.name should be("Alice")
+    }
+  }
+\end{lstlisting}
+
+Handle asynchronous operations properly
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Testing with ZIO}
+
+\begin{lstlisting}[style=scalaStyle]
+object UserServiceSpec extends ZIOSpecDefault:
+  def spec = suite("UserService")(
+    test("should create user") {
+      for {
+        service <- ZIO.service[UserService]
+        user    <- service.createUser("Alice", "alice@test.com")
+      } yield assertTrue(user.name == "Alice")
+    }
+  ).provide(UserServiceLive.layer)
+\end{lstlisting}
+
+ZIO Test provides functional testing
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Test-Driven Development (TDD)}
+
+\begin{itemize}
+  \item \textbf{Red}: Write failing test first
+  \item \textbf{Green}: Write minimal code to pass
+  \item \textbf{Refactor}: Improve code while keeping tests green
+  \item \textbf{Benefits}: Better design, 100\% test coverage
+  \item \textbf{Challenges}: Requires discipline and practice
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{TDD drives better software design}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{TDD Example}
+
+\begin{lstlisting}[style=scalaStyle]
+// 1. Red - Write failing test
+class StringUtilsSpec extends AnyFlatSpec:
+  "reverse" should "reverse a string" in {
+    StringUtils.reverse("hello") should be("olleh")
+  }
+
+// 2. Green - Make it pass
+object StringUtils:
+  def reverse(s: String): String = s.reverse
+\end{lstlisting}
+
+Write test first, then implementation
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Behavior-Driven Development (BDD)}
+
+\begin{itemize}
+  \item \textbf{Given-When-Then}: Structure test scenarios
+  \item \textbf{Readable Tests}: Business-friendly language
+  \item \textbf{Collaboration}: Bridge between technical and business
+  \item \textbf{Living Documentation}: Tests as specifications
+  \item \textbf{ScalaTest Support}: Feature and scenario DSL
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{BDD focuses on behavior and outcomes}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{BDD with ScalaTest}
+
+\begin{lstlisting}[style=scalaStyle]
+class UserRegistrationSpec extends FeatureSpec with GivenWhenThen:
+  feature("User Registration") {
+    scenario("Valid user signs up") {
+      given("a valid email address")
+      val email = "user@example.com"
+      
+      when("user registers")
+      val result = UserService.register(email)
+      
+      then("user should be created")
+      result should be(defined)
+    }
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Test Doubles}
+
+\begin{itemize}
+  \item \textbf{Mocks}: Verify interactions and behavior
+  \item \textbf{Stubs}: Return predefined responses
+  \item \textbf{Fakes}: Working implementations for testing
+  \item \textbf{Spies}: Record calls to real objects
+  \item \textbf{Dummies}: Objects passed but never used
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Choose the right test double for your needs}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Stubs vs Mocks}
+
+\begin{lstlisting}[style=scalaStyle]
+// Stub - returns data
+val stubRepo = stub[UserRepository]
+when(stubRepo.findById(1L)).thenReturn(Some(user))
+
+// Mock - verifies behavior
+val mockRepo = mock[UserRepository]
+service.deleteUser(1L)
+verify(mockRepo).delete(1L)
+\end{lstlisting}
+
+Stubs provide data, mocks verify behavior
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Parameterized Tests}
+
+\begin{lstlisting}[style=scalaStyle]
+class MathSpec extends AnyFlatSpec with TableDrivenPropertyChecks:
+  val examples = Table(
+    ("input", "expected"),
+    (0, 1), (1, 1), (5, 120)
+  )
+  
+  forAll(examples) { (input, expected) =>
+    MathUtils.factorial(input) should be(expected)
+  }
+\end{lstlisting}
+
+Test multiple inputs efficiently
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Test Fixtures}
+
+\begin{lstlisting}[style=scalaStyle]
+trait UserFixture:
+  def withUsers[T](testCode: List[User] => T): T = {
+    val users = List(
+      User(1L, "Alice", "alice@test.com"),
+      User(2L, "Bob", "bob@test.com")
+    )
+    testCode(users)
+  }
+
+class UserServiceSpec extends AnyFlatSpec with UserFixture:
+  "UserService" should "process users" in withUsers { users =>
+    // Test with fixture data
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Performance Testing}
+
+\begin{itemize}
+  \item \textbf{Load Testing}: Normal expected load
+  \item \textbf{Stress Testing}: Beyond normal capacity
+  \item \textbf{Spike Testing}: Sudden load increases
+  \item \textbf{Volume Testing}: Large amounts of data
+  \item \textbf{Tools}: JMeter, Gatling, ScalaMeter
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Ensure your application scales}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{ScalaMeter Example}
+
+\begin{lstlisting}[style=scalaStyle]
+import org.scalameter._
+
+class PerformanceSpec extends AnyFlatSpec:
+  "List operations" should "be performant" in {
+    val sizes = Gen.range("size")(1000, 5000, 1000)
+    
+    val time = measure {
+      val list = (1 to 1000).toList
+      list.map(_ * 2).filter(_ > 100)
+    }
+    
+    time should be < 10.millis
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Mutation Testing}
+
+\begin{itemize}
+  \item \textbf{Concept}: Introduce bugs to test your tests
+  \item \textbf{Mutants}: Modified versions of your code
+  \item \textbf{Kill Rate}: Percentage of mutants caught
+  \item \textbf{Benefits}: Reveals weak tests
+  \item \textbf{Tools}: Stryker4s, PIT for Scala
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Test quality matters more than coverage}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Contract Testing}
+
+\begin{itemize}
+  \item \textbf{Consumer-Driven}: Consumers define expectations
+  \item \textbf{Provider Testing}: Verify contract compliance
+  \item \textbf{Independent Deployment}: Test service boundaries
+  \item \textbf{Microservices}: Essential for distributed systems
+  \item \textbf{Tools}: Pact, Spring Cloud Contract
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Test service interactions safely}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Snapshot Testing}
+
+\begin{lstlisting}[style=scalaStyle]
+class ApiResponseSpec extends AnyFlatSpec:
+  "API" should "return expected JSON" in {
+    val response = api.getUser(1L)
+    val json = response.asJson.spaces2
+    
+    // Compare with saved snapshot
+    json should matchSnapshot("user-response.json")
+  }
+\end{lstlisting}
+
+Capture and compare complex outputs
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Testing Microservices}
+
+\begin{itemize}
+  \item \textbf{Service Tests}: Individual service testing
+  \item \textbf{Contract Tests}: API compatibility
+  \item \textbf{Component Tests}: Service with dependencies
+  \item \textbf{End-to-End Tests}: Full system scenarios
+  \item \textbf{Chaos Testing}: Failure resilience
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Layer your testing strategy}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Testing Configuration}
+
+\begin{lstlisting}[style=scalaStyle]
+// application-test.conf
+database {
+  url = "jdbc:h2:mem:test"
+  driver = "org.h2.Driver"
+}
+
+class ConfigSpec extends AnyFlatSpec:
+  "Config" should "load test settings" in {
+    val config = ConfigFactory.load("application-test")
+    config.getString("database.url") should include("h2:mem")
+  }
+\end{lstlisting}
+
+Separate test configuration
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Continuous Testing}
+
+\begin{itemize}
+  \item \textbf{Fast Feedback}: Run tests on every change
+  \item \textbf{Test Categories}: Unit, integration, acceptance
+  \item \textbf{Parallel Execution}: Speed up test suites
+  \item \textbf{Flaky Test Management}: Identify and fix unstable tests
+  \item \textbf{Test Reporting}: Visibility and metrics
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Automate testing in your pipeline}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Test Organization}
+
+\begin{itemize}
+  \item \textbf{Directory Structure}: Mirror production code
+  \item \textbf{Naming Conventions}: Consistent test naming
+  \item \textbf{Test Categories}: Use tags and suites
+  \item \textbf{Shared Utilities}: Common test helpers
+  \item \textbf{Test Resources}: Manage test data files
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Organize tests for maintainability}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Handling in Tests}
+
+\begin{lstlisting}[style=scalaStyle]
+class ErrorHandlingSpec extends AnyFlatSpec:
+  "Service" should "handle errors gracefully" in {
+    assertThrows[ValidationException] {
+      UserService.createUser("", "invalid-email")
+    }
+  }
+  
+  it should "return proper error messages" in {
+    val result = UserService.validateEmail("invalid")
+    result.left.value should include("Invalid email")
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Testing Anti-Patterns}
+
+\begin{itemize}
+  \item \textbf{Ice Cream Cone}: Too many E2E tests
+  \item \textbf{Testing Implementation}: Test behavior, not internals
+  \item \textbf{Fragile Tests}: Brittle tests that break easily
+  \item \textbf{Slow Tests}: Long-running test suites
+  \item \textbf{Mystery Guest}: Hidden test dependencies
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Avoid these common testing mistakes}
+
+\end{frame}
+
+%---------------------------------------------------------
+\section{Testing Strategy}
+
+\begin{frame}
+\frametitle{Test Coverage and Metrics}
+
+\begin{itemize}
+  \item \textbf{Line Coverage}: Percentage of code executed
+  \item \textbf{Branch Coverage}: All decision paths tested
+  \item \textbf{Mutation Testing}: Test quality assessment
+  \item \textbf{Performance Testing}: Load and stress testing
+  \item \textbf{Security Testing}: Vulnerability assessment
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Tools}: scoverage, sbt-scoverage, ScalaMeter
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Continuous Integration}
+
+\begin{itemize}
+  \item \textbf{Automated Testing}: Run tests on every commit
+  \item \textbf{Parallel Execution}: Speed up test suites
+  \item \textbf{Test Categories}: Unit, integration, acceptance
+  \item \textbf{Quality Gates}: Coverage thresholds
+  \item \textbf{Test Reports}: Visibility into test results
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{CI/CD pipeline ensures code quality}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Conclusion}
+
+\begin{itemize}
+  \item \textbf{Test Early}: Write tests as you code
+  \item \textbf{Test Often}: Automate everything
+  \item \textbf{Test Smart}: Focus on critical paths
+  \item \textbf{Test Fast}: Keep feedback cycles short
+  \item \textbf{Test Real}: Use integration tests strategically
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Remember}: Good tests enable confident refactoring and feature development
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Thank You!}
+
+\begin{center}
+\Large Questions?
+
+\vspace{1cm}
+
+\textbf{Said BOUDJELDA}\\
+Senior Software Engineer @SCIAM\\
+GitHub: @bmscomp
+
+\vspace{0.5cm}
+\qrcode[height=2cm]{https://github.com/bmscomp}
+\end{center}
+
+\end{frame}
+
+\end{document}

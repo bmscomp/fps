@@ -1,0 +1,400 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{graphicx}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{Exercise \thesection:}{1em}{}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  tabsize=2,
+  language=Scala
+}
+\title{\textbf{Unit and Integration Testing Exercises in Scala 3}}
+\author{\textbf{Said BOUDJELDA}\\ \textbf{Paris-Panthéon-Assas University}}
+% \titlegraphic{\includegraphics[width=5cm]{logo}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+  \includegraphics[width=5cm]{logo}
+\end{center}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This document contains 30 exercises designed to teach unit testing and integration testing techniques in Scala 3. The exercises progress from basic test writing to advanced testing patterns using frameworks like ScalaTest, MUnit, and ZIO Test.
+
+Each exercise includes a problem statement, expected behavior, and hints for implementation. The exercises are organized by difficulty and testing concept complexity.
+
+\section{Basic Unit Testing (Exercises 1-10)}
+
+\subsection{Exercise 1: First Unit Test}
+\textbf{Problem:} Write a test class for a simple \texttt{Calculator} with methods \texttt{add}, \texttt{subtract}, \texttt{multiply}, and \texttt{divide}. Test all basic operations.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+class CalculatorSpec extends AnyFlatSpec with Matchers:
+  "Calculator" should "add numbers correctly" in {
+    Calculator.add(2, 3) should be(5)
+  }
+\end{lstlisting}
+
+\textbf{Hint:} Use ScalaTest's \texttt{AnyFlatSpec} and \texttt{Matchers} trait.
+
+\subsection{Exercise 2: Testing Pure Functions}
+\textbf{Problem:} Create tests for pure functions like \texttt{factorial}, \texttt{fibonacci}, and \texttt{isPrime}. Include edge cases and boundary conditions.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+"MathUtils" should "calculate factorial correctly" in {
+  MathUtils.factorial(0) should be(1)
+  MathUtils.factorial(5) should be(120)
+}
+\end{lstlisting}
+
+\textbf{Hint:} Test with 0, 1, negative numbers, and typical values.
+
+\subsection{Exercise 3: Testing Collections}
+\textbf{Problem:} Write tests for functions that operate on collections: \texttt{findMax}, \texttt{filterEven}, \texttt{groupByLength}. Test with empty collections and various data sets.
+
+\textbf{Expected behavior:} Should handle empty collections gracefully and process various data correctly.
+
+\textbf{Hint:} Use \texttt{shouldBe}, \texttt{should contain}, and \texttt{shouldBe empty}.
+
+\subsection{Exercise 4: Testing with Custom Matchers}
+\textbf{Problem:} Create custom matchers for testing a \texttt{Person} class with properties like age and email validation.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+person should beAdult
+person should haveValidEmail
+\end{lstlisting}
+
+\textbf{Hint:} Extend \texttt{Matcher} trait and implement \texttt{apply} method.
+
+\subsection{Exercise 5: Property-Based Testing}
+\textbf{Problem:} Use ScalaCheck to write property-based tests for string operations like \texttt{reverse}, \texttt{concatenation}, and \texttt{length}.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+property("reversing twice gives original") {
+  forAll { (s: String) =>
+    StringUtils.reverse(StringUtils.reverse(s)) should be(s)
+  }
+}
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{forAll} and define properties that should always hold.
+
+\subsection{Exercise 6: Testing Exception Scenarios}
+\textbf{Problem:} Write tests that verify functions throw appropriate exceptions with correct messages for invalid inputs.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+"divide" should "throw ArithmeticException for zero denominator" in {
+  assertThrows[ArithmeticException] {
+    Calculator.divide(10, 0)
+  }
+}
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{assertThrows} and verify exception messages.
+
+\subsection{Exercise 7: Parameterized Tests}
+\textbf{Problem:} Create parameterized tests using \texttt{Table} to test multiple input/output combinations for validation functions.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+val testCases = Table(
+  ("input", "expected"),
+  ("valid@email.com", true),
+  ("invalid-email", false)
+)
+forAll(testCases) { (input, expected) =>
+  EmailValidator.isValid(input) should be(expected)
+}
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{TableDrivenPropertyChecks} trait.
+
+\subsection{Exercise 8: Testing with Setup and Teardown}
+\textbf{Problem:} Write tests that require setup and cleanup (like temporary files or database connections) using ScalaTest lifecycle methods.
+
+\textbf{Expected behavior:} Should properly initialize resources before tests and clean up after.
+
+\textbf{Hint:} Use \texttt{BeforeAndAfter} or \texttt{BeforeAndAfterEach} traits.
+
+\subsection{Exercise 9: Testing Async Operations}
+\textbf{Problem:} Write tests for functions that return \texttt{Future[T]} using ScalaTest's async testing support.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+"AsyncService" should "handle futures" in {
+  val future = AsyncService.processData("test")
+  future.map(_ should be("processed: test"))
+}
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{AsyncFlatSpec} and return \texttt{Future[Assertion]}.
+
+\subsection{Exercise 10: Testing with Time}
+\textbf{Problem:} Create tests for time-dependent functions using mocked clocks or fixed time sources.
+
+\textbf{Expected behavior:} Should test time-based logic without depending on system time.
+
+\textbf{Hint:} Use dependency injection for clock instances.
+
+\section{Testing with Mocks and Stubs (Exercises 11-15)}
+
+\subsection{Exercise 11: Basic Mocking}
+\textbf{Problem:} Use Mockito to create mock objects for testing a \texttt{UserService} that depends on a \texttt{UserRepository}.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+val mockRepo = mock[UserRepository]
+when(mockRepo.findById(1L)).thenReturn(Some(user))
+
+val service = new UserService(mockRepo)
+service.getUser(1L) should be(Some(user))
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{MockitoSugar} trait and \texttt{when().thenReturn()} pattern.
+
+\subsection{Exercise 12: Verifying Interactions}
+\textbf{Problem:} Write tests that verify specific methods were called on mock objects with correct parameters.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+service.deleteUser(1L)
+verify(mockRepo).delete(1L)
+verify(mockRepo, times(1)).delete(anyLong())
+\end{lstlisting}
+
+\textbf{Hint:} Use \texttt{verify} with different argument matchers.
+
+\subsection{Exercise 13: Stubbing vs Mocking}
+\textbf{Problem:} Create examples showing the difference between stubs (return data) and mocks (verify behavior).
+
+\textbf{Expected behavior:} Demonstrate when to use each approach.
+
+\textbf{Hint:} Stubs focus on state, mocks focus on interactions.
+
+\subsection{Exercise 14: Fake Objects}
+\textbf{Problem:} Implement a fake \texttt{InMemoryUserRepository} for testing instead of using mocks.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+class InMemoryUserRepository extends UserRepository:
+  private val users = mutable.Map[Long, User]()
+  
+  def save(user: User): User = {
+    users(user.id) = user
+    user
+  }
+\end{lstlisting}
+
+\textbf{Hint:} Implement a working version using in-memory data structures.
+
+\subsection{Exercise 15: Testing with Partial Mocks}
+\textbf{Problem:} Create tests using \texttt{spy} to partially mock objects where some methods call real implementations.
+
+\textbf{Expected behavior:} Should allow selective mocking of specific methods.
+
+\textbf{Hint:} Use \texttt{spy} instead of \texttt{mock} and selectively stub methods.
+
+\section{Integration Testing (Exercises 16-22)}
+
+\subsection{Exercise 16: Database Integration Test}
+\textbf{Problem:} Write integration tests for a DAO class using an embedded database (H2) with test data setup and cleanup.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+class UserDaoIntegrationSpec extends AnyFlatSpec:
+  "UserDao" should "save and retrieve users" in {
+    val user = User(1L, "Alice", "alice@test.com")
+    userDao.save(user)
+    userDao.findById(1L) should be(Some(user))
+  }
+\end{lstlisting}
+
+\textbf{Hint:} Use test database configuration and \texttt{@BeforeEach}/\texttt{@AfterEach} for cleanup.
+
+\subsection{Exercise 17: HTTP API Integration Test}
+\textbf{Problem:} Create integration tests for REST endpoints using a test HTTP client and mock external services.
+
+\textbf{Expected behavior:} Should test full HTTP request/response cycle.
+
+\textbf{Hint:} Use frameworks like Akka HTTP TestKit or Http4s testing utilities.
+
+\subsection{Exercise 18: Testcontainers Integration}
+\textbf{Problem:} Write integration tests using Testcontainers to spin up real database instances for testing.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+class DatabaseIntegrationSpec extends AnyFlatSpec:
+  val container = PostgreSQLContainer("postgres:13")
+  
+  override def beforeAll(): Unit = {
+    container.start()
+  }
+\end{lstlisting}
+
+\textbf{Hint:} Use Testcontainers Scala library and manage container lifecycle.
+
+\subsection{Exercise 19: Message Queue Integration}
+\textbf{Problem:} Test message producers and consumers using embedded message brokers or Testcontainers.
+
+\textbf{Expected behavior:} Should verify message publishing and consumption.
+
+\textbf{Hint:} Use embedded Kafka or RabbitMQ for testing.
+
+\subsection{Exercise 20: Configuration-Based Testing}
+\textbf{Problem:} Create tests that use different configurations for different environments (test, integration, production).
+
+\textbf{Expected behavior:} Should load appropriate test configurations.
+
+\textbf{Hint:} Use Typesafe Config with test-specific configuration files.
+
+\subsection{Exercise 21: Testing with External APIs}
+\textbf{Problem:} Write integration tests for services that call external APIs using WireMock or similar tools.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+stubFor(get(urlEqualTo("/api/users/1"))
+  .willReturn(aResponse()
+    .withStatus(200)
+    .withBody("""{"id": 1, "name": "Alice"}""")))
+\end{lstlisting}
+
+\textbf{Hint:} Mock external HTTP services to avoid dependencies on external systems.
+
+\subsection{Exercise 22: End-to-End Testing}
+\textbf{Problem:} Create end-to-end tests that exercise the entire application stack from HTTP requests to database persistence.
+
+\textbf{Expected behavior:} Should test complete user scenarios.
+
+\textbf{Hint:} Use test containers and test HTTP clients together.
+
+\section{Advanced Testing Patterns (Exercises 23-30)}
+
+\subsection{Exercise 23: Test Data Builders}
+\textbf{Problem:} Implement the Test Data Builder pattern to create complex test objects with default values and easy customization.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+val user = UserBuilder()
+  .withName("Alice")
+  .withAge(25)
+  .build()
+\end{lstlisting}
+
+\textbf{Hint:} Use case class copy method or builder pattern with fluent interface.
+
+\subsection{Exercise 24: Testing ZIO Effects}
+\textbf{Problem:} Write tests for ZIO-based services using ZIO Test framework.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+test("should process user data") {
+  for {
+    service <- ZIO.service[UserService]
+    result  <- service.processUser(userData)
+  } yield assertTrue(result.isValid)
+}
+\end{lstlisting}
+
+\textbf{Hint:} Use ZIO Test's \texttt{test} and \texttt{suite} functions.
+
+\subsection{Exercise 25: Contract Testing}
+\textbf{Problem:} Implement consumer-driven contract tests using Pact or similar framework.
+
+\textbf{Expected behavior:} Should verify API contracts between services.
+
+\textbf{Hint:} Define contracts from consumer perspective and verify on provider side.
+
+\subsection{Exercise 26: Performance Testing}
+\textbf{Problem:} Write performance tests using ScalaMeter to measure execution time and memory usage.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+performance of "List operations" in {
+  measure method "map" in {
+    using(sizes) in { size =>
+      (1 to size).toList.map(_ * 2)
+    }
+  }
+}
+\end{lstlisting}
+
+\textbf{Hint:} Use ScalaMeter's DSL and generators for test data.
+
+\subsection{Exercise 27: Mutation Testing}
+\textbf{Problem:} Set up mutation testing using Stryker4s to evaluate test quality.
+
+\textbf{Expected behavior:} Should identify weak spots in test coverage.
+
+\textbf{Hint:} Configure Stryker4s and analyze mutation scores.
+
+\subsection{Exercise 28: Snapshot Testing}
+\textbf{Problem:} Implement snapshot testing for complex data structures or API responses.
+
+\textbf{Expected behavior:}
+\begin{lstlisting}
+"API response" should "match snapshot" in {
+  val response = api.getComplexData()
+  response should matchSnapshot("complex-data.json")
+}
+\end{lstlisting}
+
+\textbf{Hint:} Store expected outputs as files and compare against actual results.
+
+\subsection{Exercise 29: Chaos Testing}
+\textbf{Problem:} Write tests that introduce random failures to verify system resilience.
+
+\textbf{Expected behavior:} Should test failure scenarios and recovery mechanisms.
+
+\textbf{Hint:} Use libraries like Chaos Monkey or implement custom failure injection.
+
+\subsection{Exercise 30: Comprehensive Testing Strategy}
+\textbf{Problem:} Design a complete testing strategy for a microservice including unit tests, integration tests, contract tests, and performance tests with appropriate CI/CD integration.
+
+\textbf{Expected behavior:} Should demonstrate enterprise-level testing practices.
+
+\textbf{Hint:} Combine multiple testing approaches and consider the testing pyramid.
+
+\section{Conclusion}
+
+These exercises cover the full spectrum of testing in Scala 3, from basic unit tests to advanced integration and performance testing. Practice implementing each exercise and experiment with different testing frameworks to understand their strengths and use cases.
+
+Key takeaways:
+\begin{itemize}
+\item Write tests that are fast, reliable, and maintainable
+\item Use the right level of testing (unit vs integration vs end-to-end)
+\item Mock external dependencies in unit tests, use real ones in integration tests
+\item Property-based testing can find edge cases that example-based tests miss
+\item Test data builders make complex test scenarios manageable
+\item Integration tests should focus on component boundaries and interactions
+\item Performance and chaos testing help ensure system reliability under stress
+\item Consider the testing pyramid: many unit tests, some integration tests, few E2E tests
+\end{itemize}
+
+\end{document}

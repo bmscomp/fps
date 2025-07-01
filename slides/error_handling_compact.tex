@@ -1,0 +1,663 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{qrcode}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+
+% Define Scala syntax highlighting
+\lstdefinestyle{scalaStyle}{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{brown},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+\definecolor{scalared}{RGB}{215,50,58}
+\definecolor{darkblue}{RGB}{0,0,139}
+\definecolor{pureblue}{RGB}{0,82,155}
+\definecolor{impurered}{RGB}{186,0,13}
+\definecolor{titleblue}{RGB}{0,82,155}
+\definecolor{alertred}{RGB}{186,0,13}
+\definecolor{darkgray}{RGB}{80,80,80}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title[Error Handling in Scala]
+{Functional programming with Scala}
+
+\subtitle{Error Handling}
+
+\author[Said BOUDJELDA]
+{Said BOUDJELDA}
+
+\institute[efrei]
+{
+  Senior Software Engineer @SCIAM\\
+  GitHub @bmscomp
+}
+
+\date[efrei 2025]
+{Course, May 2025}
+
+\logo{\includegraphics[height=0.6cm]{logo}}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Overview}
+
+Modern error handling in Scala 3:
+
+\begin{itemize}
+\item \textbf{Union Types}: Native error representation
+\item \textbf{Enums}: Structured error hierarchies
+\item \textbf{Type Safety}: Errors visible in signatures
+\item \textbf{Zero Cost}: No performance overhead
+\item \textbf{Composition}: Functional error chaining
+\end{itemize}
+
+\textit{From exceptions to types}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Traditional vs Modern}
+
+\begin{lstlisting}[style=scalaStyle]
+// Old way: Hidden exceptions
+def divide(a: Int, b: Int): Int = 
+  if b == 0 then throw ArithmeticException("Zero")
+  else a / b
+
+// Scala 3 way: Union types
+def safeDivide(a: Int, b: Int): Int | String = 
+  if b == 0 then "Division by zero" else a / b
+\end{lstlisting}
+
+\textbf{Modern approach}: Type-safe, no hidden failures
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Problems with Exception-Based Error Handling}
+
+\begin{itemize}
+  \item \textbf{Hidden Failures}: No compile-time visibility of errors
+  \item \textbf{Type System Bypass}: Exceptions break normal type flow
+  \item \textbf{Performance Overhead}: Stack unwinding is expensive
+  \item \textbf{Resource Leaks}: Finally blocks can be error-prone
+  \item \textbf{Poor Composability}: Hard to chain operations safely
+  \item \textbf{Testing Difficulties}: Exception paths often forgotten
+  \item \textbf{Maintenance Issues}: Catching wrong exception types
+\end{itemize}
+
+\vspace{0.3cm}
+\textit{Modern functional approaches solve these problems}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Union Types}
+
+\begin{lstlisting}[style=scalaStyle]
+type Result[T] = T | String
+
+def parse(s: String): Result[Int] = 
+  try s.toInt catch case _ => "Invalid number"
+
+parse("42") match
+  case num: Int => println(s"Success: $num")
+  case err: String => println(s"Error: $err")
+\end{lstlisting}
+
+Simple, type-safe error handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Enums for Error Types}
+
+\begin{lstlisting}[style=scalaStyle]
+enum AppError:
+  case ValidationError(msg: String)
+  case NetworkError(msg: String)
+  case ParseError(msg: String)
+
+def validateAge(age: Int): Int | AppError =
+  if age > 0 then age 
+  else AppError.ValidationError("Invalid age")
+\end{lstlisting}
+
+Structured error hierarchies
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Extension Methods}
+
+\begin{lstlisting}[style=scalaStyle]
+extension [T](value: T)
+  def ensure(condition: T => Boolean, 
+             error: String): T | String =
+    if condition(value) then value else error
+
+// Usage
+"hello".ensure(_.nonEmpty, "Empty string")
+42.ensure(_ > 0, "Must be positive")
+\end{lstlisting}
+
+Fluent validation APIs
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Chaining Operations}
+
+\begin{lstlisting}[style=scalaStyle]
+extension [T](result: T | String)
+  def andThen[U](f: T => U | String): U | String = 
+    result match
+      case value: T => f(value)
+      case error: String => error
+
+"42".ensure(_.nonEmpty, "Empty")
+  .andThen(s => parse(s))
+  .andThen(n => n.ensure(_ > 0, "Negative"))
+\end{lstlisting}
+
+Composable error handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Option for Null Safety}
+
+\begin{lstlisting}[style=scalaStyle]
+def findUser(id: Int): Option[String] = 
+  if id > 0 then Some(s"User$id") else None
+
+val result = findUser(1)
+  .map(_.toUpperCase)
+  .getOrElse("Not found")
+
+println(result) // USER1
+\end{lstlisting}
+
+Clean null handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Either for Rich Errors}
+
+\begin{lstlisting}[style=scalaStyle]
+def validateUser(name: String, age: Int): Either[String, String] = 
+  for
+    n <- if name.nonEmpty then Right(name) else Left("No name")
+    a <- if age > 0 then Right(age) else Left("Bad age")
+  yield s"$n is $a years old"
+
+println(validateUser("John", 25))
+// Right(John is 25 years old)
+\end{lstlisting}
+
+For-comprehension error handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Resource Management}
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.util.Using
+
+def readFile(name: String): String | String = 
+  Using(scala.io.Source.fromFile(name)) { source =>
+    source.mkString
+  }.toEither match
+    case Right(content) => content
+    case Left(ex) => s"Error: ${ex.getMessage}"
+\end{lstlisting}
+
+Automatic cleanup
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Given/Using Context}
+
+\begin{lstlisting}[style=scalaStyle]
+trait Logger:
+  def log(msg: String): Unit
+
+given Logger with
+  def log(msg: String) = println(s"[LOG] $msg")
+
+def validate[T](value: T)(using logger: Logger): Option[T] =
+  logger.log(s"Validating $value")
+  Some(value)
+\end{lstlisting}
+
+Contextual error handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Async Error Handling}
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.concurrent.Future
+
+def fetchUser(id: Int): Future[String | AppError] = 
+  Future {
+    if id > 0 then s"User$id"
+    else AppError.ValidationError("Invalid ID")
+  }
+
+fetchUser(1).map {
+  case user: String => s"Found: $user"
+  case error: AppError => s"Error: $error"
+}
+\end{lstlisting}
+
+Future with union types
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Pattern Matching}
+
+\begin{lstlisting}[style=scalaStyle]
+def handle(result: String | Int | AppError): String = result match
+  case s: String => s"Text: $s"
+  case n: Int => s"Number: $n"
+  case AppError.ValidationError(msg) => s"Invalid: $msg"
+  case AppError.NetworkError(msg) => s"Network: $msg"
+  case AppError.ParseError(msg) => s"Parse: $msg"
+\end{lstlisting}
+
+Exhaustive error handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Boundaries}
+
+\begin{lstlisting}[style=scalaStyle]
+def safe[T](operation: () => T): T | AppError =
+  try operation()
+  catch 
+    case _: NumberFormatException => AppError.ParseError("Bad format")
+    case ex: Exception => AppError.NetworkError(ex.getMessage)
+
+val result = safe(() => "42".toInt)
+// Success: 42
+\end{lstlisting}
+
+Isolate failures
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Validation DSL}
+
+\begin{lstlisting}[style=scalaStyle]
+case class Validated[T](value: T, errors: List[String])
+
+extension [T](value: T)
+  def validate: Validated[T] = Validated(value, Nil)
+
+extension [T](v: Validated[T])
+  def check(cond: T => Boolean, err: String): Validated[T] =
+    if cond(v.value) then v else v.copy(errors = v.errors :+ err)
+\end{lstlisting}
+
+Custom validation builder
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Testing Errors}
+
+\begin{lstlisting}[style=scalaStyle]
+def testValidation(): Unit =
+  // Test success
+  assert(validateAge(25) == 25)
+  
+  // Test error
+  validateAge(-5) match
+    case AppError.ValidationError(msg) => assert(msg.contains("Invalid"))
+    case _ => sys.error("Expected error")
+\end{lstlisting}
+
+Simple error testing
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Performance: Zero Cost}
+
+\begin{lstlisting}[style=scalaStyle]
+// Union types - no boxing overhead
+type FastResult = String | Int
+
+def quickParse(s: String): FastResult =
+  if s.forall(_.isDigit) then s.toInt else "Invalid"
+
+// Opaque types for domain safety
+opaque type UserId = Int
+object UserId:
+  def apply(id: Int): UserId | String = 
+    if id > 0 then id else "Invalid ID"
+\end{lstlisting}
+
+Efficient error handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Real-World API}
+
+\begin{lstlisting}[style=scalaStyle]
+case class User(name: String, age: Int)
+
+def createUser(name: String, age: String): User | List[String] =
+  val validations = List(
+    if name.nonEmpty then None else Some("Name required"),
+    try { age.toInt; None } catch case _ => Some("Invalid age")
+  ).flatten
+  
+  if validations.isEmpty then User(name, age.toInt) else validations
+\end{lstlisting}
+
+Complete validation example
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Migration Strategy}
+
+\begin{lstlisting}[style=scalaStyle]
+// Step 1: Wrap exceptions
+def legacy(): String = throw RuntimeException("Old")
+def wrapped(): String | String = 
+  try legacy() catch case ex => ex.getMessage
+
+// Step 2: Use union types
+def modern(): String | AppError =
+  AppError.NetworkError("Converted")
+\end{lstlisting}
+
+Gradual migration path
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Logging and Monitoring}
+
+\begin{lstlisting}[style=scalaStyle]
+def withLogging[T](op: String)(f: => T | AppError): T | AppError =
+  val start = System.currentTimeMillis()
+  f match
+    case result: T => 
+      println(s"$op: success (${System.currentTimeMillis() - start}ms)")
+      result
+    case error: AppError => 
+      println(s"$op: error - ${error}")
+      error
+\end{lstlisting}
+
+Structured error tracking
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Comparison Table}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Pattern} & \textbf{Use Case} & \textbf{Performance} \\
+\hline
+Union Types & Simple errors & Zero cost \\
+\hline
+Enums & Structured errors & Zero cost \\
+\hline
+Option & Null safety & Minimal overhead \\
+\hline
+Either & Rich errors & Some allocation \\
+\hline
+Try & Exception wrapping & Exception cost \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Recommendation:} Union types for most cases
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Best Practices}
+
+\begin{enumerate}
+\item \textbf{Union types} for simple cases
+\item \textbf{Enums} for error hierarchies  
+\item \textbf{Extensions} for fluent APIs
+\item \textbf{Pattern matching} over try-catch
+\item \textbf{Compose} operations safely
+\item \textbf{Test} error scenarios
+\end{enumerate}
+
+\begin{lstlisting}[style=scalaStyle]
+// Good: Explicit errors
+def parse(s: String): Int | String
+
+// Bad: Hidden exceptions  
+def parse(s: String): Int
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Advanced: Custom Error Monad}
+
+\begin{lstlisting}[style=scalaStyle]
+case class Result[T](value: T | String):
+  def map[U](f: T => U): Result[U] = value match
+    case v: T => Result(f(v))
+    case e: String => Result(e)
+  
+  def flatMap[U](f: T => Result[U]): Result[U] = value match
+    case v: T => f(v)
+    case e: String => Result(e)
+\end{lstlisting}
+
+Build your own error monad
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{HTTP Client Example}
+
+\begin{lstlisting}[style=scalaStyle]
+enum HttpError:
+  case NotFound, Unauthorized, ServerError
+
+def get(url: String): String | HttpError =
+  if url.startsWith("https://") then "Response data"
+  else HttpError.NotFound
+
+get("https://api.example.com") match
+  case data: String => println(s"Success: $data")
+  case HttpError.NotFound => println("URL not found")
+\end{lstlisting}
+
+Simple HTTP error handling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Database Operations}
+
+\begin{lstlisting}[style=scalaStyle]
+enum DbError:
+  case ConnectionFailed, QueryFailed, NotFound
+
+def findById(id: Int): User | DbError =
+  if id > 0 then User("John", 25)
+  else DbError.NotFound
+
+def updateUser(user: User): Unit | DbError =
+  if user.name.nonEmpty then () else DbError.QueryFailed
+\end{lstlisting}
+
+Database error modeling
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Validation Pipeline}
+
+\begin{lstlisting}[style=scalaStyle]
+def validateEmail(email: String): String | String =
+  email.ensure(_.nonEmpty, "Email required")
+    .andThen(_.ensure(_.contains("@"), "Invalid format"))
+    .andThen(_.ensure(_.length < 100, "Too long"))
+
+def processSignup(email: String) = validateEmail(email) match
+  case valid: String => s"Welcome: $valid"
+  case error: String => s"Error: $error"
+\end{lstlisting}
+
+Composable validation chain
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Configuration Loading}
+
+\begin{lstlisting}[style=scalaStyle]
+case class Config(host: String, port: Int)
+
+def loadConfig(): Config | String =
+  for
+    host <- sys.env.get("HOST").toRight("Missing HOST")
+    portStr <- sys.env.get("PORT").toRight("Missing PORT")  
+    port <- try Right(portStr.toInt) catch case _ => Left("Invalid PORT")
+  yield Config(host, port)
+\end{lstlisting}
+
+Environment configuration
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{JSON Parsing}
+
+\begin{lstlisting}[style=scalaStyle]
+def parseJson(json: String): Map[String, String] | String =
+  try 
+    val data = json.split(",").map(_.split(":")).map { arr =>
+      arr(0).trim -> arr(1).trim
+    }.toMap
+    data
+  catch case _ => "Invalid JSON format"
+
+parseJson("name:John,age:25") match
+  case data: Map[String, String] => println(data)
+  case error: String => println(s"Parse error: $error")
+\end{lstlisting}
+
+Simple JSON parsing with errors
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Key Takeaways}
+
+\begin{itemize}
+\item \textbf{Union types} are the modern Scala 3 way
+\item \textbf{Zero cost} error handling
+\item \textbf{Type safety} prevents surprises
+\item \textbf{Pattern matching} handles all cases
+\item \textbf{Composition} builds complex validations
+\item \textbf{Migration} can be gradual
+\end{itemize}
+
+\vspace{1em}
+\textit{Make errors visible in types, not hidden in exceptions}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}{References}
+\footnotesize
+
+\begin{thebibliography}{4}
+\beamertemplatetextbibitems
+
+\bibitem[Odersky, 2023]{odersky2023}
+\textcolor{pureblue}{Odersky, M.} 
+\textit{Scala 3 Reference: Union Types}. 2023.
+
+\bibitem[EPFL, 2023]{epfl2023}
+\textcolor{pureblue}{EPFL Team} 
+\textit{Scala 3 Book: Error Handling}. 2023.
+
+\bibitem[Wampler, 2021]{wampler2021}
+\textcolor{pureblue}{Wampler, D.} 
+\textit{Programming Scala 3}. 2021.
+
+\bibitem[Spiewak, 2020]{spiewak2020}
+\textcolor{pureblue}{Spiewak, D.} 
+\textit{Functional Error Handling}. 2020.
+
+\end{thebibliography}
+
+\end{frame}
+
+\end{document}

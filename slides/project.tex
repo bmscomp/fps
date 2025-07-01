@@ -1,0 +1,303 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+
+% Page setup
+\geometry{margin=1in}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{CS 4XX - Functional Programming}
+\lhead{Scala 3 Project Requirements}
+\cfoot{\thepage}
+
+% Code listing setup
+\lstdefinelanguage{Scala}{
+  keywords={abstract,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield},
+  otherkeywords={=>,<-,<\%,<:,>:,\#,@},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+
+\lstset{
+    language=Scala,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+\title{\textbf{Scala 3 Functional Programming Project}\\
+\large Requirements and Specification Document}
+\author{Course: Functional Programming with Scala\\
+Instructor: Dr. [Instructor Name]\\
+Department of Computer Science}
+\date{Due Date: [Insert Date]\\
+Academic Year: 2024-2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Project Overview}
+
+This project aims to develop a comprehensive understanding of Scala 3's advanced functional programming features through the implementation of a data processing and analysis system. Students will create a modular, type-safe application that demonstrates proficiency in modern Scala programming paradigms, including algebraic data types, higher-order functions, monadic compositions, and concurrent programming patterns.
+
+\subsection{Learning Objectives}
+
+Upon completion of this project, students will be able to:
+\begin{itemize}
+    \item Utilize Scala 3's new syntax features including significant indentation and improved type inference
+    \item Implement complex data structures using case classes, sealed traits, and enums
+    \item Apply functional programming principles including immutability, pure functions, and referential transparency
+    \item Demonstrate proficiency with higher-order functions, monads, and functional error handling
+    \item Implement concurrent and parallel processing using Scala's Future and parallel collections
+    \item Create comprehensive unit tests using ScalaTest framework
+    \item Document code effectively using ScalaDoc conventions
+\end{itemize}
+
+\section{Project Requirements}
+
+\subsection{Core Functionality Requirements}
+
+\subsubsection{Data Model (25 points)}
+
+Implement a comprehensive data model for a library management system that includes:
+
+\begin{itemize}
+    \item \textbf{Book Entity}: Create a case class representing books with fields for ISBN, title, authors (as a list), publication year, genre, and availability status
+    \item \textbf{User Entity}: Implement a sealed trait hierarchy for different user types (Student, Faculty, Librarian) with appropriate fields and methods
+    \item \textbf{Transaction Entity}: Design a transaction system to track book loans, returns, and reservations with timestamps and user associations
+    \item \textbf{Library Catalog}: Implement a main catalog class that manages collections of books and users using immutable data structures
+\end{itemize}
+
+\subsubsection{Functional Operations (30 points)}
+
+Implement the following functional operations using Scala 3 features:
+
+\begin{itemize}
+    \item \textbf{Search and Filter}: Create higher-order functions to search books by various criteria (title, author, genre, availability) using function composition and partial application
+    \item \textbf{Data Transformation}: Implement map, filter, and reduce operations on book collections to generate reports and statistics
+    \item \textbf{Validation System}: Use Either or custom ADTs to handle validation of book data, user information, and transaction requests
+    \item \textbf{Recommendation Engine}: Create a simple recommendation system using functional composition to suggest books based on user reading history
+\end{itemize}
+
+\subsubsection{Advanced Scala 3 Features (25 points)}
+
+Demonstrate proficiency with Scala 3 specific features:
+
+\begin{itemize}
+    \item \textbf{Union Types}: Use union types for flexible API design where appropriate
+    \item \textbf{Opaque Types}: Implement opaque type aliases for domain-specific types (ISBN, UserID)
+    \item \textbf{Extension Methods}: Create extension methods to enhance existing types with domain-specific functionality
+    \item \textbf{Given/Using}: Implement type class patterns using given instances and using clauses
+    \item \textbf{Enums}: Replace sealed trait hierarchies with appropriate enum definitions where suitable
+\end{itemize}
+
+\subsubsection{Error Handling and IO (10 points)}
+
+\begin{itemize}
+    \item Implement robust error handling using functional approaches (Try, Either, Option)
+    \item Create file I/O operations to persist and load library data using JSON format
+    \item Handle edge cases and provide meaningful error messages
+\end{itemize}
+
+\subsubsection{Testing and Documentation (10 points)}
+
+\begin{itemize}
+    \item Write comprehensive unit tests covering all major functionality using ScalaTest
+    \item Achieve minimum 80\% code coverage
+    \item Document all public APIs using ScalaDoc with examples
+    \item Include property-based tests using ScalaCheck for at least two core functions
+\end{itemize}
+
+\section{Technical Specifications}
+
+\subsection{Project Structure}
+
+The project must follow standard Scala project structure:
+
+\begin{lstlisting}
+project-root/
+├── build.sbt
+├── project/
+│   ├── build.properties
+│   └── plugins.sbt
+├── src/
+│   ├── main/
+│   │   └── scala/
+│   │       ├── models/
+│   │       ├── services/
+│   │       ├── utils/
+│   │       └── Main.scala
+│   └── test/
+│       └── scala/
+│           ├── models/
+│           ├── services/
+│           └── utils/
+├── data/
+├── docs/
+└── README.md
+\end{lstlisting}
+
+\subsection{Dependencies and Build Configuration}
+
+Your \texttt{build.sbt} must include:
+
+\begin{lstlisting}
+ThisBuild / scalaVersion := "3.3.1"
+ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / organization := "edu.efrei"
+
+lazy val root = (project in file("."))
+  .settings(
+    name := "library-management-system",
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.17" % Test,
+      "org.scalacheck" %% "scalacheck" % "1.17.0" % Test,
+      "org.typelevel" %% "cats-core" % "2.10.0",
+      "io.circe" %% "circe-core" % "0.14.6",
+      "io.circe" %% "circe-generic" % "0.14.6",
+      "io.circe" %% "circe-parser" % "0.14.6"
+    )
+  )
+\end{lstlisting}
+
+\subsection{Code Quality Standards}
+
+\begin{itemize}
+    \item Follow Scala style guidelines and naming conventions
+    \item Use meaningful variable and function names
+    \item Implement proper error handling without throwing exceptions in business logic
+    \item Ensure all functions are pure where possible
+    \item Use immutable data structures throughout
+    \item Apply appropriate access modifiers (private, protected, etc.)
+\end{itemize}
+
+\section{Deliverables}
+
+\subsection{Source Code}
+\begin{itemize}
+    \item Complete Scala 3 project with all required functionality
+    \item Properly structured codebase following conventions
+    \item All code must compile without warnings using Scala 3.3.1
+\end{itemize}
+
+\subsection{Documentation}
+\begin{itemize}
+    \item Comprehensive README.md with setup and usage instructions
+    \item ScalaDoc documentation for all public APIs
+    \item Design document explaining architectural decisions (1-2 pages)
+    \item User manual with examples of system usage
+\end{itemize}
+
+\subsection{Testing}
+\begin{itemize}
+    \item Complete test suite with minimum 80\% coverage
+    \item Property-based tests for core algorithms
+    \item Integration tests for file I/O operations
+    \item Performance benchmarks for search operations
+\end{itemize}
+
+\section{Evaluation Criteria}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Criterion} & \textbf{Points} & \textbf{Description} \\
+\hline
+Functionality & 40 & Correctness and completeness of implementation \\
+\hline
+Code Quality & 25 & Style, organization, and best practices \\
+\hline
+Scala 3 Features & 20 & Proper use of advanced language features \\
+\hline
+Testing & 10 & Coverage and quality of test suite \\
+\hline
+Documentation & 5 & Clarity and completeness of documentation \\
+\hline
+\textbf{Total} & \textbf{100} & \\
+\hline
+\end{tabular}
+\caption{Project Evaluation Rubric}
+\end{table}
+
+\section{Submission Guidelines}
+
+\subsection{Submission Format}
+\begin{itemize}
+    \item Submit as a compressed archive (.zip or .tar.gz)
+    \item Include all source code, tests, and documentation
+    \item Ensure project builds successfully with \texttt{sbt compile}
+    \item Include a brief video demonstration (5-10 minutes) showing key features
+\end{itemize}
+
+\subsection{Late Submission Policy}
+\begin{itemize}
+    \item 10\% penalty per day late
+    \item No submissions accepted after one week past due date
+    \item Extensions granted only for documented emergencies
+\end{itemize}
+
+\section{Resources and References}
+
+\subsection{Required Reading}
+\begin{itemize}
+    \item Scala 3 Official Documentation: \url{https://docs.scala-lang.org/scala3/}
+    \item "Programming in Scala" by Odersky, Spoon, and Venners (4th Edition)
+    \item Course lecture materials and slides
+\end{itemize}
+
+\subsection{Recommended Resources}
+\begin{itemize}
+    \item Scala 3 Migration Guide: \url{https://docs.scala-lang.org/scala3/guides/migration/}
+    \item Cats Library Documentation: \url{https://typelevel.org/cats/}
+    \item ScalaTest User Guide: \url{https://www.scalatest.org/user_guide}
+    \item Functional Programming in Scala by Chiusano and Bjarnason
+\end{itemize}
+
+\section{Academic Integrity}
+
+This project must represent your original work. While you may discuss general concepts with classmates, all code implementation must be your own. Use of AI assistants is permitted for documentation and debugging but not for core algorithm implementation. Cite any external sources or inspirations in your documentation.
+
+Plagiarism will result in automatic failure of the assignment and may lead to course failure. When in doubt, consult with the instructor before submission.
+
+\section{Getting Help}
+
+\begin{itemize}
+    \item Office hours: [Days and times]
+    \item Course discussion forum: [Platform/link]
+    \item Email: [instructor-email]
+    \item Study groups encouraged for concept discussion
+\end{itemize}
+
+\vfill
+\textit{This document is subject to revision. Students will be notified of any changes via the course management system.}
+
+\end{document}

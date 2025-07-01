@@ -1,0 +1,875 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{qrcode}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+
+% Define Scala syntax highlighting
+\lstdefinestyle{scalaStyle}{
+  language=Scala,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{brown},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+\definecolor{scalared}{RGB}{215,50,58}
+\definecolor{darkblue}{RGB}{0,0,139}
+\definecolor{pureblue}{RGB}{0,82,155}
+\definecolor{impurered}{RGB}{186,0,13}
+\definecolor{titleblue}{RGB}{0,82,155}
+\definecolor{alertred}{RGB}{186,0,13}
+\definecolor{darkgray}{RGB}{80,80,80}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\title[Scala Error Handling]
+{Error Handling in Scala 3}
+
+\subtitle{From Exceptions to Functional Error Management}
+
+\author[Said BOUDJELDA]
+{Said BOUDJELDA}
+
+\institute[efrei]
+{
+  Senior Software Engineer @SCIAM\\
+  Email : mohamed-said.boudjelda@intervenants.efrei.net \\ 
+  Follow me on GitHub @bmscomp
+}
+
+\date[efrei 2025]
+{Course, May 2025}
+
+\logo{\includegraphics[height=0.6cm]{logo}}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%---------------------------------------------------------
+\begin{frame}
+\frametitle{Overview}
+
+Error handling is crucial in any programming language. Scala 3 offers multiple approaches:
+
+\begin{itemize}
+\item \textbf{Traditional}: Exceptions and try-catch blocks
+\item \textbf{Functional}: Option, Either, Try types
+\item \textbf{Modern}: Union types and improved pattern matching
+\end{itemize}
+
+We'll explore evolution from imperative to functional error handling.
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Traditional Exception Handling}
+\framesubtitle{The Old Way}
+
+\begin{lstlisting}[style=scalaStyle]
+// Traditional Java-style exception handling
+def divide(a: Int, b: Int): Int = {
+  if (b == 0) 
+    throw new ArithmeticException("Division by zero")
+  else 
+    a / b
+}
+
+try {
+  val result = divide(10, 0)
+  println(s"Result: $result")
+} catch {
+  case e: ArithmeticException => 
+    println(s"Error: ${e.getMessage}")
+} finally {
+  println("Cleanup operations")
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Problems with Exceptions}
+
+\begin{itemize}
+\item \textbf{Not type-safe}: Exceptions are not tracked in method signatures
+\item \textbf{Control flow}: Breaks normal program flow
+\item \textbf{Performance}: Stack unwinding is expensive
+\item \textbf{Composition}: Hard to compose operations that might fail
+\end{itemize}
+
+\begin{lstlisting}[style=scalaStyle]
+// Signature doesn't tell us this method can fail
+def parseNumber(s: String): Int = s.toInt // Can throw!
+
+// Callers might forget to handle exceptions
+val num = parseNumber("not-a-number") // Runtime crash!
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Option Type - Handling Null Values}
+\framesubtitle{Functional Approach}
+
+\begin{lstlisting}[style=scalaStyle]
+// Option represents optional values - Some or None
+def safeDivide(a: Int, b: Int): Option[Int] = 
+  if (b == 0) None else Some(a / b)
+
+// Pattern matching
+safeDivide(10, 2) match {
+  case Some(result) => println(s"Result: $result")
+  case None => println("Division by zero")
+}
+
+// Functional operations
+val result = safeDivide(10, 2)
+  .map(_ * 2)           // Transform if present
+  .filter(_ > 5)        // Filter condition
+  .getOrElse(0)         // Default value
+
+println(result) // 10
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Option - Advanced Operations}
+
+\begin{lstlisting}[style=scalaStyle]
+// Chaining operations that might fail
+def parseAge(s: String): Option[Int] = 
+  try Some(s.toInt) catch case _ => None
+
+def validateAge(age: Int): Option[Int] = 
+  if (age >= 0 && age <= 150) Some(age) else None
+
+// Composition using flatMap
+def processAge(input: String): Option[String] = 
+  parseAge(input)
+    .flatMap(validateAge)
+    .map(age => s"Valid age: $age")
+
+println(processAge("25"))    // Some(Valid age: 25)
+println(processAge("200"))   // None
+println(processAge("abc"))   // None
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Either Type - Rich Error Information}
+\framesubtitle{Left = Error, Right = Success}
+
+\begin{lstlisting}[style=scalaStyle]
+sealed trait AppError
+case class ValidationError(msg: String) extends AppError
+case class ParseError(msg: String) extends AppError
+
+def parseAndValidateAge(s: String): Either[AppError, Int] = 
+  try {
+    val age = s.toInt
+    if (age >= 0 && age <= 150) 
+      Right(age)
+    else 
+      Left(ValidationError(s"Invalid age: $age"))
+  } catch {
+    case _: NumberFormatException => 
+      Left(ParseError(s"Not a number: $s"))
+  }
+
+parseAndValidateAge("25") match {
+  case Right(age) => println(s"Valid age: $age")
+  case Left(error) => println(s"Error: $error")
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Either - Functional Operations}
+
+\begin{lstlisting}[style=scalaStyle]
+// Either is right-biased in Scala 2.12+
+val result = parseAndValidateAge("25")
+  .map(_ * 2)                    // Only if Right
+  .flatMap(age => 
+    if (age < 100) Right(s"Young: $age")
+    else Left(ValidationError("Too old")))
+
+// For-comprehension with Either
+def processUser(name: String, ageStr: String) = 
+  for {
+    age <- parseAndValidateAge(ageStr)
+    validName <- if (name.nonEmpty) Right(name) 
+                else Left(ValidationError("Empty name"))
+  } yield User(validName, age)
+
+case class User(name: String, age: Int)
+
+println(processUser("John", "25")) // Right(User(John,25))
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Try Type - Exception Wrapping}
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.util.{Try, Success, Failure}
+
+// Try wraps operations that might throw exceptions
+def safeParse(s: String): Try[Int] = Try(s.toInt)
+
+def safeFileRead(filename: String): Try[String] = 
+  Try(scala.io.Source.fromFile(filename).mkString)
+
+// Pattern matching
+safeParse("123") match {
+  case Success(num) => println(s"Parsed: $num")
+  case Failure(ex) => println(s"Failed: ${ex.getMessage}")
+}
+
+// Functional operations
+val result = safeParse("42")
+  .map(_ * 2)
+  .recover { case _: NumberFormatException => 0 }
+  .get
+
+println(result) // 84
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Scala 3 Union Types for Errors}
+\framesubtitle{Modern Approach}
+
+\begin{lstlisting}[style=scalaStyle]
+// Union types in Scala 3
+type ParseResult = Int | String
+
+def parseNumber(s: String): ParseResult = 
+  try s.toInt
+  catch case _: NumberFormatException => s"Invalid: $s"
+
+// Pattern matching with union types
+parseNumber("42") match {
+  case num: Int => println(s"Parsed: $num")
+  case error: String => println(s"Error: $error")
+}
+
+// More complex union types
+type Result[T] = T | Exception
+
+def divide(a: Int, b: Int): Result[Double] = 
+  if (b == 0) ArithmeticException("Division by zero")
+  else a.toDouble / b
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Accumulation with Validated}
+\framesubtitle{Collecting Multiple Errors}
+
+\begin{lstlisting}[style=scalaStyle]
+// Using cats library for error accumulation
+import cats.data.Validated
+import cats.syntax.all._
+
+type ValidationResult[T] = Validated[List[String], T]
+
+def validateName(name: String): ValidationResult[String] = 
+  if (name.nonEmpty) name.valid
+  else List("Name cannot be empty").invalid
+
+def validateAge(age: Int): ValidationResult[Int] = 
+  if (age >= 0 && age <= 150) age.valid
+  else List(s"Invalid age: $age").invalid
+
+// Accumulate all errors
+(validateName(""), validateAge(200)).mapN(User.apply) match {
+  case Validated.Valid(user) => println(s"User: $user")
+  case Validated.Invalid(errors) => 
+    println(s"Errors: ${errors.mkString(", ")}")
+}
+// Output: Errors: Name cannot be empty, Invalid age: 200
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Custom Error ADTs}
+\framesubtitle{Algebraic Data Types for Errors}
+
+\begin{lstlisting}[style=scalaStyle]
+// Define comprehensive error hierarchy
+sealed trait DatabaseError extends Exception
+case class ConnectionError(msg: String) extends DatabaseError
+case class QueryError(sql: String, msg: String) extends DatabaseError
+case class TimeoutError(seconds: Int) extends DatabaseError
+
+sealed trait ValidationError extends Exception
+case class InvalidEmail(email: String) extends ValidationError
+case class InvalidPassword(reason: String) extends ValidationError
+
+// Combine different error types
+type AppError = DatabaseError | ValidationError
+
+def createUser(email: String, password: String): Either[AppError, User] = 
+  for {
+    validEmail <- validateEmail(email)
+    validPassword <- validatePassword(password)
+    user <- saveToDatabase(validEmail, validPassword)
+  } yield user
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Handling with For-Comprehensions}
+
+\begin{lstlisting}[style=scalaStyle]
+// Sequential error handling
+def processOrder(): Either[String, Order] = 
+  for {
+    user <- findUser("john@example.com")
+    product <- findProduct("laptop")
+    inventory <- checkInventory(product.id)
+    order <- createOrder(user, product) if inventory > 0
+  } yield order
+
+// With custom error types
+def processOrderAdvanced(): Either[AppError, Order] = 
+  for {
+    user <- findUser("john@example.com")
+              .toRight(UserNotFound("john@example.com"))
+    product <- findProduct("laptop")
+                .toRight(ProductNotFound("laptop"))
+    _ <- validateInventory(product)
+    order <- saveOrder(user, product)
+  } yield order
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Resource Management with Using}
+\framesubtitle{Scala 3 Automatic Resource Management}
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.util.Using
+
+// Automatic resource cleanup
+def readFileContent(filename: String): Try[String] = 
+  Using(scala.io.Source.fromFile(filename)) { source =>
+    source.getLines().mkString("\n")
+  }
+
+// Multiple resources
+def copyFile(from: String, to: String): Try[Unit] = 
+  Using.Manager { use =>
+    val source = use(scala.io.Source.fromFile(from))
+    val writer = use(java.io.PrintWriter(to))
+    source.getLines().foreach(writer.println)
+  }
+
+// Resource is automatically closed even if exception occurs
+readFileContent("config.txt") match {
+  case Success(content) => println(content)
+  case Failure(ex) => println(s"Failed to read: ${ex.getMessage}")
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Recovery Strategies}
+
+\begin{lstlisting}[style=scalaStyle]
+// Retry mechanism
+def withRetry[T](maxAttempts: Int)(operation: () => Try[T]): Try[T] = 
+  operation() match {
+    case success @ Success(_) => success
+    case Failure(_) if maxAttempts > 1 => 
+      withRetry(maxAttempts - 1)(operation)
+    case failure => failure
+  }
+
+// Circuit breaker pattern
+class CircuitBreaker(failureThreshold: Int) {
+  private var failureCount = 0
+  private var state: State = Closed
+  
+  def execute[T](operation: () => T): Try[T] = 
+    state match {
+      case Closed => Try(operation()).recoverWith(handleFailure)
+      case Open => Failure(new Exception("Circuit breaker open"))
+    }
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Async Error Handling with Future}
+
+\begin{lstlisting}[style=scalaStyle]
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
+// Async operations with error handling
+def fetchUser(id: Int): Future[Either[String, User]] = 
+  Future {
+    // Simulate network call
+    Thread.sleep(100)
+    if (id > 0) Right(User(s"user$id", 25))
+    else Left("Invalid user ID")
+  }
+
+// Combine async operations
+def getUserProfile(id: Int): Future[Either[String, Profile]] = 
+  for {
+    userResult <- fetchUser(id)
+    profile <- userResult match {
+      case Right(user) => fetchProfile(user.id)
+      case Left(error) => Future.successful(Left(error))
+    }
+  } yield profile
+
+// Error recovery
+fetchUser(-1).recover {
+  case ex: Exception => Left(s"Network error: ${ex.getMessage}")
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monadic Error Handling}
+\framesubtitle{Composing Operations}
+
+\begin{lstlisting}[style=scalaStyle]
+// Error monad for chaining operations
+case class Result[+T](value: Either[String, T]) {
+  def map[U](f: T => U): Result[U] = 
+    Result(value.map(f))
+  
+  def flatMap[U](f: T => Result[U]): Result[U] = 
+    value match {
+      case Right(v) => f(v)
+      case Left(e) => Result(Left(e))
+    }
+}
+
+object Result {
+  def success[T](value: T): Result[T] = Result(Right(value))
+  def failure[T](error: String): Result[T] = Result(Left(error))
+}
+
+// Usage
+val computation = for {
+  a <- Result.success(10)
+  b <- Result.success(20)
+  c <- if (b != 0) Result.success(a / b) else Result.failure("Division by zero")
+} yield c
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Handling Best Practices}
+
+\begin{itemize}
+\item \textbf{Use types}: Make errors explicit in function signatures
+\item \textbf{Avoid exceptions}: For predictable failures, use Option/Either
+\item \textbf{Fail fast}: Validate inputs early
+\item \textbf{Error accumulation}: Collect all validation errors
+\item \textbf{Recovery}: Provide fallback mechanisms
+\end{itemize}
+
+\begin{lstlisting}[style=scalaStyle]
+// Good: Error is explicit in return type
+def parseConfig(file: String): Either[ConfigError, Config]
+
+// Bad: Exception not visible in signature
+def parseConfig(file: String): Config // throws ConfigException
+
+// Good: Accumulate validation errors
+def validateUser(data: UserData): ValidatedNel[Error, User]
+
+// Bad: Stop at first error
+def validateUser(data: UserData): Either[Error, User]
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Performance Considerations}
+
+\begin{lstlisting}[style=scalaStyle]
+// Option/Either allocation overhead
+def heavyComputation(): Option[Int] = {
+  // Avoid creating Option for every intermediate step
+  val intermediate = computeValue()
+  if (isValid(intermediate)) Some(intermediate) else None
+}
+
+// Use specialized collections for performance
+import scala.collection.mutable
+
+// For high-performance scenarios, consider using:
+// - Specialized Option types (OptionalInt, etc.)
+// - Custom Result types with value classes
+// - Unboxed union types in Scala 3
+
+value class UserId(val value: Int) extends AnyVal
+type UserResult = UserId | String // Union type - no boxing!
+
+def findUser(id: Int): UserResult = 
+  if (id > 0) UserId(id) else "Invalid ID"
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Scala 3 Improvements}
+\framesubtitle{New Features for Error Handling}
+
+\begin{lstlisting}[style=scalaStyle]
+// Union types for error handling
+type ParseError = NumberFormatException | IllegalArgumentException
+
+// Improved pattern matching
+def handleError(error: Throwable): String = error match {
+  case _: NumberFormatException => "Invalid number format"
+  case _: IllegalArgumentException => "Invalid argument"
+  case _ => "Unknown error"
+}
+
+// Enums for error codes
+enum ErrorCode {
+  case ValidationFailed, NetworkTimeout, DatabaseError
+  
+  def message: String = this match {
+    case ValidationFailed => "Input validation failed"
+    case NetworkTimeout => "Network request timed out"
+    case DatabaseError => "Database operation failed"
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Boundary Pattern}
+
+\begin{lstlisting}[style=scalaStyle]
+// Error boundary for isolating failures
+trait ErrorBoundary[F[_]] {
+  def handle[A](fa: F[A])(recover: Throwable => A): F[A]
+}
+
+// Implementation for Future
+given ErrorBoundary[Future] with {
+  def handle[A](fa: Future[A])(recover: Throwable => A): Future[A] = 
+    fa.recover { case ex => recover(ex) }
+}
+
+// Usage
+def safeOperation[F[_]: ErrorBoundary](computation: F[String]): F[String] = 
+  summon[ErrorBoundary[F]].handle(computation) { ex =>
+    s"Operation failed: ${ex.getMessage}"
+  }
+
+// Boundary isolates errors from propagating up
+val result = safeOperation(Future(throw new Exception("Boom!")))
+// Future will contain "Operation failed: Boom!" instead of exception
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Testing Error Scenarios}
+
+\begin{lstlisting}[style=scalaStyle]
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class ErrorHandlingSpec extends AnyFlatSpec with Matchers {
+  
+  "safeDivide" should "return None for division by zero" in {
+    safeDivide(10, 0) shouldBe None
+  }
+  
+  it should "return Some for valid division" in {
+    safeDivide(10, 2) shouldBe Some(5)
+  }
+  
+  "parseAndValidateAge" should "accumulate multiple errors" in {
+    val result = validateUser(UserData("", -5))
+    result.isInvalid shouldBe true
+    result.swap.getOrElse(Nil) should contain allOf(
+      "Name cannot be empty",
+      "Invalid age: -5"
+    )
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Migration Strategy}
+\framesubtitle{From Exceptions to Functional}
+
+\begin{lstlisting}[style=scalaStyle]
+// Phase 1: Wrap existing exception-throwing code
+def legacyOperation(): String = throw new RuntimeException("Legacy!")
+
+def wrappedLegacy(): Try[String] = Try(legacyOperation())
+
+// Phase 2: Introduce Either for domain errors
+def improvedOperation(): Either[String, String] = 
+  wrappedLegacy().toEither.left.map(_.getMessage)
+
+// Phase 3: Use custom error types
+sealed trait DomainError
+case class LegacyError(msg: String) extends DomainError
+
+def modernOperation(): Either[DomainError, String] = 
+  improvedOperation().left.map(LegacyError.apply)
+
+// Phase 4: Full functional error handling
+def fullyFunctional(): Either[DomainError, String] = 
+  Right("Success!") // No exceptions thrown
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Real-World Example: HTTP Client}
+
+\begin{lstlisting}[style=scalaStyle]
+import sttp.client3._
+
+sealed trait HttpError
+case class NetworkError(cause: Throwable) extends HttpError
+case class InvalidResponse(code: Int, body: String) extends HttpError
+case class ParseError(json: String, cause: Throwable) extends HttpError
+
+def fetchUser(id: Int): IO[Either[HttpError, User]] = {
+  val request = basicRequest
+    .get(uri"https://api.example.com/users/$id")
+    .response(asString)
+  
+  for {
+    response <- request.send(backend).attempt.map(_.left.map(NetworkError.apply))
+    user <- response match {
+      case Right(resp) if resp.code.isSuccess => 
+        parseJson[User](resp.body).leftMap(ParseError(resp.body, _))
+      case Right(resp) => 
+        Left(InvalidResponse(resp.code.code, resp.body))
+      case Left(error) => Left(error)
+    }
+  } yield user
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Handling in Web Applications}
+
+\begin{lstlisting}[style=scalaStyle]
+// Using Tapir for HTTP API error handling
+import sttp.tapir._
+
+sealed trait ApiError
+case class ValidationError(field: String, message: String) extends ApiError
+case class NotFoundError(resource: String, id: String) extends ApiError
+case class ServerError(message: String) extends ApiError
+
+val getUserEndpoint = endpoint.get
+  .in("users" / path[String]("id"))
+  .out(jsonBody[User])
+  .errorOut(oneOf[ApiError](
+    oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[ValidationError])),
+    oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFoundError])),
+    oneOfVariant(statusCode(StatusCode.InternalServerError).and(jsonBody[ServerError]))
+  ))
+
+// Implementation automatically maps errors to HTTP responses
+def getUser(id: String): IO[Either[ApiError, User]] = 
+  userService.findById(id).map {
+    case Some(user) => Right(user)
+    case None => Left(NotFoundError("user", id))
+  }
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monitoring and Observability}
+
+\begin{lstlisting}[style=scalaStyle]
+// Error tracking with structured logging
+import org.slf4j.LoggerFactory
+import io.circe.syntax._
+
+val logger = LoggerFactory.getLogger(this.getClass)
+
+def processWithLogging[A](operation: String)(thunk: => Either[AppError, A]): Either[AppError, A] = {
+  val startTime = System.currentTimeMillis()
+  
+  thunk match {
+    case Right(result) => 
+      logger.info(s"$operation completed successfully in ${System.currentTimeMillis() - startTime}ms")
+      Right(result)
+    
+    case Left(error) => 
+      logger.error(s"$operation failed after ${System.currentTimeMillis() - startTime}ms", 
+        Map("operation" -> operation, "error" -> error.toString).asJson.noSpaces)
+      Left(error)
+  }
+}
+
+// Usage
+val result = processWithLogging("user-creation") {
+  createUser("john@example.com", "password123")
+}
+\end{lstlisting}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Error Handling Patterns Summary}
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Pattern} & \textbf{Use Case} & \textbf{Pros} & \textbf{Cons} \\
+\hline
+Try-Catch & Legacy code & Familiar & Not type-safe \\
+\hline
+Option & Null safety & Simple & No error info \\
+\hline
+Either & Rich errors & Type-safe & Right-biased only \\
+\hline
+Validated & Error accumulation & Collects all errors & More complex \\
+\hline
+Union Types & Scala 3 errors & Modern, efficient & New syntax \\
+\hline
+IO/Effect & Async + Sync & Composable & Learning curve \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+\item Choose based on your specific requirements
+\item Migrate gradually from exceptions to functional types
+\item Consider performance implications
+\end{itemize}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Key Takeaways}
+
+\begin{enumerate}
+\item \textbf{Make errors explicit} in function signatures
+\item \textbf{Use Option} for simple null/missing value cases
+\item \textbf{Use Either} when you need error information
+\item \textbf{Use Validated} when you need to accumulate errors
+\item \textbf{Consider Union types} in Scala 3 for performance
+\item \textbf{Design error hierarchies} with sealed traits
+\item \textbf{Test error scenarios} thoroughly
+\item \textbf{Provide recovery mechanisms} where appropriate
+\end{enumerate}
+
+\vspace{1em}
+\textit{Functional error handling leads to more robust, composable, and maintainable code.}
+
+\end{frame}
+
+%---------------------------------------------------------
+\begin{frame}{References and Further Reading}
+\footnotesize
+
+\begin{thebibliography}{9}
+\beamertemplatetextbibitems
+
+\subsection*{Scala Error Handling}
+\bibitem[Odersky, 2021]{odersky2021}
+\textcolor{pureblue}{Odersky, M.} 
+\textit{Scala 3 Reference: Union Types}. 2021.
+\footnotesize{\\ \color{gray}Official documentation on union types for error handling}
+
+\bibitem[Spiewak, 2018]{spiewak2018}
+\textcolor{pureblue}{Spiewak, D.} 
+\textit{Functional Error Handling with Monads}. 2018.
+\footnotesize{\\ \color{gray}Comprehensive guide to monadic error handling}
+
+\subsection*{Functional Programming}
+\bibitem[Lipovaca, 2011]{lipovaca2011}
+\textcolor{pureblue}{Lipovaca, M.} 
+\textit{Learn You a Haskell: Error Handling}. 2011.
+\footnotesize{\\ \color{gray}Fundamental concepts of functional error handling}
+
+\bibitem[Cats Contributors, 2023]{cats2023}
+\textcolor{pureblue}{Cats Contributors} 
+\textit{Cats Documentation: Error Handling}. 2023.
+\footnotesize{\\ \color{gray}Practical patterns with cats library}
+
+\subsection*{Best Practices}
+\bibitem[Wampler, 2020]{wampler2020}
+\textcolor{pureblue}{Wampler, D.} 
+\textit{Programming Scala: Error Handling}. 2020.
+\footnotesize{\\ \color{gray}Industry best practices for Scala error handling}
+
+\end{thebibliography}
+
+\end{frame}
+
+\end{document}
