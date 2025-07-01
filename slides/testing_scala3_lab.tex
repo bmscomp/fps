@@ -1,0 +1,698 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+\geometry{margin=2.5cm}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{Lab \thesection:}{1em}{}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  tabsize=2,
+  language=Scala
+}
+
+\title{\textbf{Unit Testing in Scala 3 - Practical Lab Session}}
+\author{\textbf{Said BOUDJELDA}\\ \textbf{Paris-Panthéon-Assas University}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+  \includegraphics[width=5cm]{logo}
+\end{center}
+
+\tableofcontents
+\newpage
+
+\section{Lab Overview}
+
+\subsection{Learning Objectives}
+By the end of this lab session, students will be able to:
+\begin{itemize}
+  \item Set up a Scala 3 project with testing dependencies
+  \item Write effective unit tests using ScalaTest framework
+  \item Apply Test-Driven Development (TDD) methodology
+  \item Implement property-based testing with ScalaCheck
+  \item Use mocking frameworks for testing dependencies
+  \item Understand testing best practices and patterns
+  \item Measure and improve test coverage
+\end{itemize}
+
+\subsection{Prerequisites}
+\begin{itemize}
+  \item Basic knowledge of Scala 3 syntax and concepts
+  \item Understanding of object-oriented and functional programming
+  \item Familiarity with SBT build tool
+  \item IDE setup (IntelliJ IDEA or VS Code with Metals)
+\end{itemize}
+
+\subsection{Duration and Structure}
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|r|}
+\hline
+\textbf{Activity} & \textbf{Description} & \textbf{Time} \\
+\hline
+Setup & Project setup and dependencies & 15 min \\
+Part 1 & Basic unit testing with ScalaTest & 45 min \\
+Break & Coffee break & 15 min \\
+Part 2 & TDD implementation & 45 min \\
+Part 3 & Property-based testing & 30 min \\
+Part 4 & Mocking and advanced patterns & 45 min \\
+Wrap-up & Q\&A and assessment & 15 min \\
+\hline
+\textbf{Total} & & \textbf{3h 30min} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Materials and Setup}
+
+\subsection{Required Software}
+\begin{itemize}
+  \item \textbf{Java JDK 11+}: OpenJDK or Oracle JDK
+  \item \textbf{SBT 1.8+}: Scala Build Tool
+  \item \textbf{IDE}: IntelliJ IDEA Community with Scala plugin OR VS Code with Metals
+  \item \textbf{Git}: For version control
+\end{itemize}
+
+\subsection{Project Dependencies}
+Create a new SBT project with the following \texttt{build.sbt} configuration:
+
+\begin{lstlisting}
+ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / scalaVersion := "3.3.0"
+
+lazy val root = (project in file("."))
+  .settings(
+    name := "scala3-testing-lab",
+    libraryDependencies ++= Seq(
+      // Testing frameworks
+      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+      "org.scalatestplus" %% "scalacheck-1-17" % "3.2.15.0" % Test,
+      "org.scalacheck" %% "scalacheck" % "1.17.0" % Test,
+      
+      // Mocking
+      "org.mockito" %% "mockito-scala" % "1.17.12" % Test,
+      "org.scalatestplus" %% "mockito-4-6" % "3.2.15.0" % Test,
+      
+      // Production dependencies
+      "org.typelevel" %% "cats-core" % "2.9.0",
+      "org.typelevel" %% "cats-effect" % "3.4.8"
+    ),
+    
+    // Test configuration
+    Test / parallelExecution := false,
+    Test / testOptions += Tests.Argument("-oDF")
+  )
+\end{lstlisting}
+
+\subsection{Project Structure}
+\begin{lstlisting}
+scala3-testing-lab/
+├── build.sbt
+├── project/
+│   ├── build.properties
+│   └── plugins.sbt
+├── src/
+│   ├── main/scala/
+│   │   ├── domain/
+│   │   ├── service/
+│   │   └── utils/
+│   └── test/scala/
+│       ├── domain/
+│       ├── service/
+│       └── utils/
+└── README.md
+\end{lstlisting}
+
+\section{Part 1: Basic Unit Testing (45 minutes)}
+
+\subsection{Activity 1.1: Your First Test Class (15 min)}
+
+\textbf{Objective:} Create a simple calculator and write basic unit tests.
+
+\textbf{Step 1:} Create the Calculator class in \texttt{src/main/scala/utils/Calculator.scala}:
+
+\begin{lstlisting}
+package utils
+
+object Calculator:
+  def add(a: Int, b: Int): Int = a + b
+  def subtract(a: Int, b: Int): Int = a - b
+  def multiply(a: Int, b: Int): Int = a * b
+  def divide(a: Int, b: Int): Double = 
+    if b == 0 then throw new ArithmeticException("Division by zero")
+    else a.toDouble / b
+\end{lstlisting}
+
+\textbf{Step 2:} Create test class in \texttt{src/test/scala/utils/CalculatorSpec.scala}:
+
+\begin{lstlisting}
+package utils
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class CalculatorSpec extends AnyFlatSpec with Matchers:
+  
+  "Calculator" should "add two numbers correctly" in {
+    Calculator.add(2, 3) should be(5)
+    Calculator.add(-1, 1) should be(0)
+    Calculator.add(0, 0) should be(0)
+  }
+  
+  it should "subtract two numbers correctly" in {
+    Calculator.subtract(5, 3) should be(2)
+    Calculator.subtract(1, 1) should be(0)
+    Calculator.subtract(0, 5) should be(-5)
+  }
+  
+  it should "multiply two numbers correctly" in {
+    Calculator.multiply(3, 4) should be(12)
+    Calculator.multiply(-2, 3) should be(-6)
+    Calculator.multiply(0, 10) should be(0)
+  }
+  
+  it should "divide two numbers correctly" in {
+    Calculator.divide(10, 2) should be(5.0)
+    Calculator.divide(7, 2) should be(3.5)
+  }
+  
+  it should "throw exception when dividing by zero" in {
+    assertThrows[ArithmeticException] {
+      Calculator.divide(10, 0)
+    }
+  }
+\end{lstlisting}
+
+\textbf{Step 3:} Run the tests using: \texttt{sbt test}
+
+\subsection{Activity 1.2: Testing Collections (15 min)}
+
+\textbf{Objective:} Practice testing functions that work with collections.
+
+Create \texttt{src/main/scala/utils/ListUtils.scala}:
+
+\begin{lstlisting}
+package utils
+
+object ListUtils:
+  def findMax(numbers: List[Int]): Option[Int] = 
+    if numbers.isEmpty then None
+    else Some(numbers.max)
+  
+  def filterEven(numbers: List[Int]): List[Int] = 
+    numbers.filter(_ % 2 == 0)
+  
+  def groupByLength(words: List[String]): Map[Int, List[String]] = 
+    words.groupBy(_.length)
+\end{lstlisting}
+
+Create corresponding test in \texttt{src/test/scala/utils/ListUtilsSpec.scala}:
+
+\begin{lstlisting}
+package utils
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class ListUtilsSpec extends AnyFlatSpec with Matchers:
+  
+  "ListUtils.findMax" should "return the maximum value" in {
+    ListUtils.findMax(List(1, 5, 3, 9, 2)) should be(Some(9))
+    ListUtils.findMax(List(-1, -5, -2)) should be(Some(-1))
+  }
+  
+  it should "return None for empty list" in {
+    ListUtils.findMax(List.empty) should be(None)
+  }
+  
+  "ListUtils.filterEven" should "return only even numbers" in {
+    ListUtils.filterEven(List(1, 2, 3, 4, 5, 6)) should be(List(2, 4, 6))
+    ListUtils.filterEven(List(1, 3, 5)) should be(List.empty)
+    ListUtils.filterEven(List.empty) should be(List.empty)
+  }
+  
+  "ListUtils.groupByLength" should "group words by their length" in {
+    val words = List("cat", "dog", "elephant", "ox")
+    val result = ListUtils.groupByLength(words)
+    
+    result should have size 3
+    result(2) should contain only "ox"
+    result(3) should contain allOf("cat", "dog")
+    result(8) should contain only "elephant"
+  }
+\end{lstlisting}
+
+\subsection{Activity 1.3: Testing with Custom Matchers (15 min)}
+
+\textbf{Objective:} Create domain-specific test matchers.
+
+Create \texttt{src/main/scala/domain/Person.scala}:
+
+\begin{lstlisting}
+package domain
+
+case class Person(name: String, age: Int, email: String):
+  def isAdult: Boolean = age >= 18
+  def hasValidEmail: Boolean = email.contains("@") && email.contains(".")
+\end{lstlisting}
+
+Create test with custom matchers in \texttt{src/test/scala/domain/PersonSpec.scala}:
+
+\begin{lstlisting}
+package domain
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.{BeMatcher, MatchResult, Matcher, should}
+
+class PersonSpec extends AnyFlatSpec with should.Matchers:
+  
+  // Custom matchers
+  val beAdult: BeMatcher[Person] = BeMatcher { person =>
+    MatchResult(
+      person.isAdult,
+      s"${person.name} was not an adult (age: ${person.age})",
+      s"${person.name} was an adult (age: ${person.age})"
+    )
+  }
+  
+  def haveValidEmail: Matcher[Person] = Matcher { person =>
+    MatchResult(
+      person.hasValidEmail,
+      s"${person.email} was not a valid email",
+      s"${person.email} was a valid email"
+    )
+  }
+  
+  "Person" should "be identified as adult correctly" in {
+    val adult = Person("Alice", 25, "alice@example.com")
+    val minor = Person("Bob", 16, "bob@example.com")
+    
+    adult should beAdult
+    minor should not be beAdult
+  }
+  
+  it should "validate email addresses" in {
+    val validPerson = Person("Alice", 25, "alice@example.com")
+    val invalidPerson = Person("Bob", 25, "invalid-email")
+    
+    validPerson should haveValidEmail
+    invalidPerson should not(haveValidEmail)
+  }
+\end{lstlisting}
+
+\section{Part 2: Test-Driven Development (45 minutes)}
+
+\subsection{Activity 2.1: TDD Kata - String Calculator (45 min)}
+
+\textbf{Objective:} Practice TDD by implementing a string calculator step by step.
+
+\textbf{Requirements:} Implement a string calculator with these requirements:
+\begin{enumerate}
+  \item Handle empty string (return 0)
+  \item Handle single number (return the number)
+  \item Handle two numbers separated by comma (return sum)
+  \item Handle multiple numbers (return sum)
+  \item Handle new line delimiter
+  \item Handle custom delimiter
+  \item Throw exception for negative numbers
+\end{enumerate}
+
+\textbf{Step 1:} Create the failing test first in \texttt{src/test/scala/utils/StringCalculatorSpec.scala}:
+
+\begin{lstlisting}
+package utils
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class StringCalculatorSpec extends AnyFlatSpec with Matchers:
+  
+  val calculator = new StringCalculator()
+  
+  // Requirement 1: Empty string
+  "StringCalculator" should "return 0 for empty string" in {
+    calculator.add("") should be(0)
+  }
+  
+  // Requirement 2: Single number
+  it should "return the number for single digit" in {
+    calculator.add("1") should be(1)
+    calculator.add("5") should be(5)
+  }
+  
+  // Continue with more tests...
+\end{lstlisting}
+
+\textbf{Step 2:} Create minimal implementation in \texttt{src/main/scala/utils/StringCalculator.scala}:
+
+\begin{lstlisting}
+package utils
+
+class StringCalculator:
+  def add(numbers: String): Int = 
+    if numbers.isEmpty then 0
+    else numbers.toInt
+\end{lstlisting}
+
+\textbf{Step 3:} Run test, see it pass, then add next test and implement incrementally.
+
+\textbf{Complete implementation after all TDD cycles:}
+
+\begin{lstlisting}
+package utils
+
+class StringCalculator:
+  def add(numbers: String): Int = 
+    if numbers.isEmpty then 0
+    else 
+      val delimiter = extractDelimiter(numbers)
+      val cleanNumbers = extractNumbers(numbers)
+      val nums = parseNumbers(cleanNumbers, delimiter)
+      
+      val negatives = nums.filter(_ < 0)
+      if negatives.nonEmpty then
+        throw new IllegalArgumentException(s"Negatives not allowed: ${negatives.mkString(",")}")
+      
+      nums.sum
+  
+  private def extractDelimiter(numbers: String): String = 
+    if numbers.startsWith("//") then
+      numbers.charAt(2).toString
+    else "[,\n]"
+  
+  private def extractNumbers(numbers: String): String = 
+    if numbers.startsWith("//") then
+      numbers.substring(4)
+    else numbers
+  
+  private def parseNumbers(numbers: String, delimiter: String): List[Int] = 
+    if numbers.isEmpty then List(0)
+    else numbers.split(delimiter).map(_.toInt).toList
+\end{lstlisting}
+
+\section{Part 3: Property-Based Testing (30 minutes)}
+
+\subsection{Activity 3.1: ScalaCheck Properties (30 min)}
+
+\textbf{Objective:} Write property-based tests for mathematical operations.
+
+Create \texttt{src/test/scala/utils/MathPropertiesSpec.scala}:
+
+\begin{lstlisting}
+package utils
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+
+class MathPropertiesSpec extends AnyFlatSpec 
+  with Matchers 
+  with ScalaCheckPropertyChecks:
+  
+  "String reverse" should "satisfy double reversal property" in {
+    forAll { (s: String) =>
+      val reversed = s.reverse
+      reversed.reverse should be(s)
+    }
+  }
+  
+  "List concatenation" should "be associative" in {
+    forAll { (a: List[Int], b: List[Int], c: List[Int]) =>
+      (a ++ b) ++ c should be(a ++ (b ++ c))
+    }
+  }
+  
+  "Addition" should "be commutative" in {
+    forAll { (a: Int, b: Int) =>
+      whenever(math.abs(a.toLong + b.toLong) <= Int.MaxValue) {
+        Calculator.add(a, b) should be(Calculator.add(b, a))
+      }
+    }
+  }
+  
+  "Multiplication by zero" should "always return zero" in {
+    forAll { (n: Int) =>
+      Calculator.multiply(n, 0) should be(0)
+      Calculator.multiply(0, n) should be(0)
+    }
+  }
+\end{lstlisting}
+
+\section{Part 4: Mocking and Advanced Patterns (45 minutes)}
+
+\subsection{Activity 4.1: Testing with Dependencies (25 min)}
+
+\textbf{Objective:} Learn to test classes with external dependencies using mocks.
+
+Create \texttt{src/main/scala/service/UserService.scala}:
+
+\begin{lstlisting}
+package service
+
+import domain.Person
+
+trait UserRepository:
+  def findById(id: Long): Option[Person]
+  def save(person: Person): Person
+  def delete(id: Long): Boolean
+
+class UserService(repository: UserRepository):
+  def getUser(id: Long): Option[Person] = 
+    repository.findById(id)
+  
+  def createUser(name: String, age: Int, email: String): Person = 
+    val person = Person(name, age, email)
+    if !person.hasValidEmail then
+      throw new IllegalArgumentException("Invalid email")
+    repository.save(person)
+  
+  def deleteUser(id: Long): Boolean = 
+    repository.findById(id) match
+      case Some(_) => repository.delete(id)
+      case None => false
+\end{lstlisting}
+
+Create test with mocks in \texttt{src/test/scala/service/UserServiceSpec.scala}:
+
+\begin{lstlisting}
+package service
+
+import domain.Person
+import org.mockito.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class UserServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar:
+  
+  "UserService.getUser" should "return user from repository" in {
+    val mockRepo = mock[UserRepository]
+    val service = new UserService(mockRepo)
+    val user = Person("Alice", 25, "alice@test.com")
+    
+    when(mockRepo.findById(1L)).thenReturn(Some(user))
+    
+    service.getUser(1L) should be(Some(user))
+    verify(mockRepo).findById(1L)
+  }
+  
+  "UserService.createUser" should "save valid user" in {
+    val mockRepo = mock[UserRepository]
+    val service = new UserService(mockRepo)
+    val user = Person("Bob", 30, "bob@test.com")
+    
+    when(mockRepo.save(user)).thenReturn(user)
+    
+    service.createUser("Bob", 30, "bob@test.com") should be(user)
+    verify(mockRepo).save(user)
+  }
+  
+  it should "throw exception for invalid email" in {
+    val mockRepo = mock[UserRepository]
+    val service = new UserService(mockRepo)
+    
+    assertThrows[IllegalArgumentException] {
+      service.createUser("Invalid", 25, "invalid-email")
+    }
+    
+    verify(mockRepo, never).save(any[Person])
+  }
+  
+  "UserService.deleteUser" should "delete existing user" in {
+    val mockRepo = mock[UserRepository]
+    val service = new UserService(mockRepo)
+    val user = Person("Charlie", 35, "charlie@test.com")
+    
+    when(mockRepo.findById(1L)).thenReturn(Some(user))
+    when(mockRepo.delete(1L)).thenReturn(true)
+    
+    service.deleteUser(1L) should be(true)
+    verify(mockRepo).findById(1L)
+    verify(mockRepo).delete(1L)
+  }
+  
+  it should "return false for non-existing user" in {
+    val mockRepo = mock[UserRepository]
+    val service = new UserService(mockRepo)
+    
+    when(mockRepo.findById(1L)).thenReturn(None)
+    
+    service.deleteUser(1L) should be(false)
+    verify(mockRepo).findById(1L)
+    verify(mockRepo, never).delete(any[Long])
+  }
+\end{lstlisting}
+
+\subsection{Activity 4.2: Test Data Builders (20 min)}
+
+\textbf{Objective:} Implement the test data builder pattern for complex objects.
+
+Create \texttt{src/test/scala/utils/PersonBuilder.scala}:
+
+\begin{lstlisting}
+package utils
+
+import domain.Person
+
+case class PersonBuilder private(
+  name: String = "Default Name",
+  age: Int = 25,
+  email: String = "default@test.com"
+):
+  def withName(name: String): PersonBuilder = copy(name = name)
+  def withAge(age: Int): PersonBuilder = copy(age = age)
+  def withEmail(email: String): PersonBuilder = copy(email = email)
+  def adult: PersonBuilder = copy(age = 25)
+  def minor: PersonBuilder = copy(age = 16)
+  def invalidEmail: PersonBuilder = copy(email = "invalid-email")
+  
+  def build(): Person = Person(name, age, email)
+
+object PersonBuilder:
+  def apply(): PersonBuilder = new PersonBuilder()
+\end{lstlisting}
+
+Use in tests:
+
+\begin{lstlisting}
+"PersonBuilder" should "create test data easily" in {
+  val adult = PersonBuilder()
+    .withName("Alice")
+    .withAge(30)
+    .withEmail("alice@example.com")
+    .build()
+  
+  val minor = PersonBuilder()
+    .withName("Bob")
+    .minor
+    .build()
+  
+  adult.isAdult should be(true)
+  minor.isAdult should be(false)
+}
+\end{lstlisting}
+
+\section{Assessment and Deliverables}
+
+\subsection{Lab Assessment Criteria}
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|r|}
+\hline
+\textbf{Criteria} & \textbf{Description} & \textbf{Points} \\
+\hline
+Test Coverage & All methods have corresponding tests & 25\% \\
+Test Quality & Tests are clear, focused, and follow best practices & 25\% \\
+TDD Implementation & Proper red-green-refactor cycle demonstrated & 20\% \\
+Advanced Techniques & Use of property-based testing, mocking, builders & 20\% \\
+Code Organization & Clean structure and readable code & 10\% \\
+\hline
+\textbf{Total} & & \textbf{100\%} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Deliverables}
+Students should submit:
+\begin{enumerate}
+  \item Complete SBT project with all implemented classes and tests
+  \item \texttt{README.md} explaining how to run the tests
+  \item Screenshots of test execution results
+  \item Brief reflection (200 words) on TDD experience
+\end{enumerate}
+
+\subsection{Extension Activities}
+For advanced students who finish early:
+\begin{itemize}
+  \item Implement test coverage reporting with scoverage
+  \item Add integration tests with embedded database
+  \item Explore mutation testing with Stryker4s
+  \item Implement custom ScalaCheck generators
+\end{itemize}
+
+\section{Troubleshooting}
+
+\subsection{Common Issues}
+\begin{itemize}
+  \item \textbf{SBT dependency resolution}: Clear \texttt{~/.sbt} and \texttt{~/.ivy2} cache
+  \item \textbf{Test not found}: Check package declarations and imports
+  \item \textbf{Mockito issues}: Ensure proper trait/class mocking setup
+  \item \textbf{ScalaCheck failures}: Use \texttt{whenever} to add preconditions
+\end{itemize}
+
+\subsection{Useful SBT Commands}
+\begin{lstlisting}
+sbt test                    # Run all tests
+sbt testOnly *CalculatorSpec # Run specific test class
+sbt "testOnly *Calculator* -- -z add" # Run specific test method
+sbt test:console           # Start REPL with test classpath
+sbt clean test             # Clean and run tests
+\end{lstlisting}
+
+\section{Resources and Further Reading}
+
+\subsection{Documentation}
+\begin{itemize}
+  \item ScalaTest User Guide: \url{https://www.scalatest.org/user_guide}
+  \item ScalaCheck Documentation: \url{https://scalacheck.org/documentation.html}
+  \item Mockito Scala: \url{https://github.com/mockito/mockito-scala}
+\end{itemize}
+
+\subsection{Books and Articles}
+\begin{itemize}
+  \item "Test-Driven Development in Scala" by Kent Beck (adapted)
+  \item "Property-Based Testing" by Fred Hebert
+  \item "Effective Testing with ScalaTest" by Bill Venners
+\end{itemize}
+
+\subsection{Next Steps}
+\begin{itemize}
+  \item Integration testing with databases and HTTP
+  \item Performance testing with ScalaMeter
+  \item Contract testing with Pact
+  \item Testing functional effects with ZIO Test
+\end{itemize}
+
+\end{document}
